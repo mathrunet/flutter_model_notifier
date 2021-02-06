@@ -1,0 +1,108 @@
+part of model_notifier;
+
+abstract class LocalDocumentModel<T> extends DocumentModel<T> {
+  LocalDocumentModel(this.path, T initialValue)
+      : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
+            "The path hierarchy must be an even number."),
+        super(initialValue);
+
+  @override
+  set value(T newValue) {
+    if (super.value == newValue) {
+      return;
+    }
+    super.value = newValue;
+    _LocalDatabase._notifyChildChanges(this);
+  }
+
+  @override
+  @protected
+  @mustCallSuper
+  void dispose() {
+    super.dispose();
+    _LocalDatabase._removeChild(this);
+  }
+
+  @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    value = initialValue;
+  }
+
+  @protected
+  T get initialValue;
+
+  final String path;
+
+  @protected
+  @mustCallSuper
+  Future<void> onLoad() async {}
+  @protected
+  @mustCallSuper
+  Future<void> onSave() async {}
+
+  @protected
+  @mustCallSuper
+  Future<void> onDelete() async {}
+
+  @protected
+  @mustCallSuper
+  Future<void> onDidLoad() async {}
+
+  @protected
+  @mustCallSuper
+  Future<void> onDidSave() async {}
+
+  @protected
+  @mustCallSuper
+  Future<void> onDidDelete() async {}
+
+  @protected
+  @mustCallSuper
+  Map<String, Object> filterOnLoad(Map<String, Object> loaded) => loaded;
+
+  @protected
+  @mustCallSuper
+  Map<String, Object> filterOnSave(Map<String, Object> save) => save;
+
+  @override
+  Future<T> load() async {
+    await _LocalDatabase.initialize();
+    await onLoad();
+    value = fromMap(filterOnLoad(
+        _LocalDatabase._root._readFromPath<Map<String, Object>>(path) ??
+            const {}));
+    await onDidLoad();
+    return value;
+  }
+
+  @override
+  Future<T> save() async {
+    await _LocalDatabase.initialize();
+    await onSave();
+    _LocalDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
+    _LocalDatabase._addChild(this);
+    _LocalDatabase._save();
+    await onDidSave();
+    return value;
+  }
+
+  Future delete() async {
+    await _LocalDatabase.initialize();
+    await onDelete();
+    _LocalDatabase._root._deleteFromPath(path);
+    _LocalDatabase._removeChild(this);
+    _LocalDatabase._save();
+    await onDidDelete();
+  }
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) => hashCode == other.hashCode;
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => super.hashCode ^ path.hashCode;
+}
