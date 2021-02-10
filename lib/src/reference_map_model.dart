@@ -1,9 +1,9 @@
 part of model_notifier;
 
-abstract class ReferenceListModel<T extends Listenable> extends ListModel<T> {
-  ReferenceListModel(this.ref) : super() {
+abstract class ReferenceMapModel<T> extends MapModel<T> {
+  ReferenceMapModel(this.ref) : super() {
     final futureOr = build(ref);
-    if (futureOr is Future<List<T>>) {
+    if (futureOr is Future<Map<String, T>>) {
       futureOr.then(_handledOnUpdated);
     } else {
       _handledOnUpdated(futureOr);
@@ -19,25 +19,25 @@ abstract class ReferenceListModel<T extends Listenable> extends ListModel<T> {
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   int get hashCode => super.hashCode;
 
-  void _handledOnUpdated(List<T> newList) {
-    if (_equals(newList)) {
+  void _handledOnUpdated(Map<String, T> newMap) {
+    if (_equals(newMap)) {
       return;
     }
     clear();
-    addAll(newList);
+    addAll(newMap);
   }
 
-  bool _equals(List<T> newList) {
-    if (length != newList.length) {
+  bool _equals(Map<String, T> newMap) {
+    if (length != newMap.length) {
       return false;
     }
-    for (int i = 0; i < length; i++) {
-      if (this[i] != newList[i]) {
+    for (final key in keys) {
+      if (!newMap.containsKey(key) || newMap[key] != this[key]) {
         return false;
       }
     }
     return true;
   }
 
-  FutureOr<List<T>> build(ProviderReference ref);
+  FutureOr<Map<String, T>> build(ProviderReference ref);
 }

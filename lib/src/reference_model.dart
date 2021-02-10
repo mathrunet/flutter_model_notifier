@@ -1,6 +1,6 @@
 part of model_notifier;
 
-abstract class ReferenceModel<T> extends ValueNotifier<T> implements Model<T> {
+abstract class ReferenceModel<T> extends ValueModel<T> {
   ReferenceModel(this.ref, T initialValue) : super(initialValue) {
     final futureOr = build(ref);
     if (futureOr is Future<T>) {

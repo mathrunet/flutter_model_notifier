@@ -1,6 +1,7 @@
 part of model_notifier;
 
-abstract class LocalDocumentModel<T> extends DocumentModel<T> {
+abstract class LocalDocumentModel<T> extends DocumentModel<T>
+    implements StoredModel<T> {
   LocalDocumentModel(this.path, T initialValue)
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
@@ -74,6 +75,8 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T> {
     value = fromMap(filterOnLoad(
         _LocalDatabase._root._readFromPath<Map<String, Object>>(path) ??
             const {}));
+    streamController.sink.add(value);
+    notifyListeners();
     await onDidLoad();
     return value;
   }
@@ -85,6 +88,8 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T> {
     _LocalDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
     _LocalDatabase._addChild(this);
     _LocalDatabase._save();
+    streamController.sink.add(value);
+    notifyListeners();
     await onDidSave();
     return value;
   }
@@ -95,6 +100,8 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T> {
     _LocalDatabase._root._deleteFromPath(path);
     _LocalDatabase._removeChild(this);
     _LocalDatabase._save();
+    streamController.sink.add(value);
+    notifyListeners();
     await onDidDelete();
   }
 

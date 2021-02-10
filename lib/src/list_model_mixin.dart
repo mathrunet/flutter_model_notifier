@@ -10,6 +10,11 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
   }
 
   @override
+  bool get notifyOnChangeValue => true;
+
+  bool get notifyOnChangeList => true;
+
+  @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
     if (super.value == other) {
@@ -39,7 +44,10 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
   @override
   set length(int value) {
     super.value.length = value;
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
@@ -51,49 +59,73 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
   @override
   void operator []=(int index, T value) {
     super.value[index] = value;
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void add(T value) {
     super.value.add(value);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void addAll(Iterable<T> iterable) {
     super.value.addAll(iterable);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void clear() {
     super.value.clear();
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void fillRange(int start, int end, [T? fillValue]) {
     super.value.fillRange(start, end, fillValue);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void insert(int index, T element) {
     super.value.insert(index, element);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void insertAll(int index, Iterable<T> iterable) {
     super.value.insertAll(index, iterable);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   bool remove(Object? value) {
     if (super.value.remove(value)) {
-      notifyListeners();
+      if (notifyOnChangeList) {
+        streamController.sink.add(super.value);
+        notifyListeners();
+      }
       return true;
     }
     return false;
@@ -102,21 +134,30 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
   @override
   T removeAt(int index) {
     final value = super.value.removeAt(index);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
     return value;
   }
 
   @override
   T removeLast() {
     final value = super.value.removeLast();
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
     return value;
   }
 
   @override
   void removeRange(int start, int end) {
     super.value.removeRange(start, end);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
@@ -127,13 +168,19 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
       }
       return true;
     });
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void replaceRange(int start, int end, Iterable<T> replacement) {
     super.value.replaceRange(start, end, replacement);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
@@ -144,38 +191,56 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
       }
       return false;
     });
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   Iterable<T> get reversed {
     final iterable = super.value.reversed;
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
     return iterable;
   }
 
   @override
   void setAll(int index, Iterable<T> iterable) {
     super.value.setAll(index, iterable);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void setRange(int start, int end, Iterable<T> iterable, [int skipCount = 0]) {
     super.value.setRange(start, end, iterable, skipCount);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void shuffle([Random? random]) {
     super.value.shuffle(random);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void sort([int Function(T a, T b)? compare]) {
     super.value.sort(compare);
-    notifyListeners();
+    if (notifyOnChangeList) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override

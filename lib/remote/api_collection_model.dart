@@ -1,7 +1,8 @@
 part of model_notifier;
 
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
-    with ListModelMixin<T> {
+    with ListModelMixin<T>
+    implements StoredModel<List<T>> {
   ApiCollectionModel(this.endpoint, [List<T> value = const []]) : super(value);
 
   final String endpoint;
@@ -63,6 +64,8 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     onCatchResponse(res);
     final data = fromCollection(filterOnLoad(fromResponse(res.body)));
     addAll(data);
+    streamController.sink.add(value);
+    notifyListeners();
     await onDidLoad();
     return this;
   }
@@ -76,6 +79,8 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
       body: toRequest(filterOnSave(toCollection(this))),
     );
     onCatchResponse(res);
+    streamController.sink.add(value);
+    notifyListeners();
     await onDidSave();
     return this;
   }

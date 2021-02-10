@@ -58,7 +58,7 @@ class _LocalDatabase {
     if (!_parentList.containsKey(path)) {
       return;
     }
-    for (final element in _parentList[path] ?? const {}) {
+    for (final element in _parentList[path] ?? const <LocalCollectionModel>{}) {
       element._removeChildInternal(document);
     }
   }
@@ -68,7 +68,7 @@ class _LocalDatabase {
     if (!_parentList.containsKey(path)) {
       return;
     }
-    for (final element in _parentList[path] ?? const {}) {
+    for (final element in _parentList[path] ?? const <LocalCollectionModel>{}) {
       element._notifyChildChanges();
     }
   }

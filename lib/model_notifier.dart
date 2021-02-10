@@ -13,7 +13,7 @@ import "dart:collection";
 import 'dart:convert';
 import "dart:math";
 
-import 'package:flutter_riverpod/all.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:katana/katana.dart';
 import 'package:http/http.dart';
 import "package:meta/meta.dart";
@@ -34,6 +34,7 @@ part "src/map_model.dart";
 part "src/model_provider.dart";
 part "src/reference_model.dart";
 part "src/reference_list_model.dart";
+part "src/reference_map_model.dart";
 
 part "src/map_notifier.dart";
 part "src/list_notifier.dart";

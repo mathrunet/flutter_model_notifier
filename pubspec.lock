@@ -96,7 +96,7 @@ packages:
       name: flutter_riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.0-nullsafety.2"
+    version: "0.13.0-nullsafety.3"
   flutter_test:
     dependency: "direct dev"
     description: flutter
@@ -120,7 +120,7 @@ packages:
       name: hooks_riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.0-nullsafety.2"
+    version: "0.13.0-nullsafety.3"
   http:
     dependency: "direct main"
     description:
@@ -239,7 +239,7 @@ packages:
       name: riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.13.0-nullsafety.1"
+    version: "0.13.0-nullsafety.3"
   shared_preferences:
     dependency: transitive
     description:

@@ -13,7 +13,7 @@ Package that makes it easy to define ValueNotifier as a model and improves the a
 Add this to your package's pubspec.yaml file:
 ```yaml
 dependencies:
-  model_notifier: ^0.7.0-nullsafety.0
+  model_notifier: ^0.7.0-nullsafety
 ```
 You should then run `flutter pub upgrade`.
 

@@ -10,6 +10,11 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   }
 
   @override
+  bool get notifyOnChangeValue => true;
+
+  bool get notifyOnChangeMap => true;
+
+  @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
     if (super.value == other) {
@@ -42,19 +47,28 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
       return;
     }
     super.value[key] = value;
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void addAll(Map<String, T> other) {
     super.value.addAll(other);
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
   void addEntries(Iterable<MapEntry<String, T>> newEntries) {
     super.value.addEntries(newEntries);
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override
@@ -63,7 +77,9 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   @override
   void clear() {
     super.value.clear();
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      notifyListeners();
+    }
   }
 
   @override
@@ -101,7 +117,10 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   @override
   T putIfAbsent(String key, T Function() ifAbsent) {
     final value = super.value.putIfAbsent(key, ifAbsent);
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
     return value;
   }
 
@@ -109,7 +128,10 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   T? remove(Object? key) {
     final value = super.value.remove(key);
     if (value != null) {
-      notifyListeners();
+      if (notifyOnChangeMap) {
+        streamController.sink.add(super.value);
+        notifyListeners();
+      }
     }
     return value;
   }
@@ -120,7 +142,10 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
       if (!test(key, value)) {
         return false;
       }
-      notifyListeners();
+      if (notifyOnChangeMap) {
+        streamController.sink.add(super.value);
+        notifyListeners();
+      }
       return true;
     });
   }
@@ -128,14 +153,20 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   @override
   T update(String key, T Function(T value) update, {T Function()? ifAbsent}) {
     final value = super.value.update(key, update, ifAbsent: ifAbsent);
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
     return value;
   }
 
   @override
   void updateAll(T Function(String key, T value) update) {
     super.value.updateAll(update);
-    notifyListeners();
+    if (notifyOnChangeMap) {
+      streamController.sink.add(super.value);
+      notifyListeners();
+    }
   }
 
   @override

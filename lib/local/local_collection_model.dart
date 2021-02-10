@@ -1,13 +1,19 @@
 part of model_notifier;
 
 abstract class LocalCollectionModel<T extends LocalDocumentModel>
-    extends ListModel<T> {
+    extends ListModel<T> implements StoredModel<List<T>> {
   LocalCollectionModel(this.path, [List<T> value = const []])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
         super(value) {
     _LocalDatabase._registerParent(this);
   }
+
+  @override
+  bool get notifyOnChangeList => false;
+
+  @override
+  bool get notifyOnChangeValue => true;
 
   @override
   @protected
@@ -37,8 +43,12 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   Future<List<T>> load() async {
     await _LocalDatabase.initialize();
     await onLoad();
+    bool notify = false;
     final data = _LocalDatabase._root._readFromPath(path);
-    clear();
+    if (isNotEmpty) {
+      clear();
+      notify = true;
+    }
     if (data != null) {
       final addData = <T>[];
       for (final tmp in data.entries) {
@@ -50,6 +60,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         addData.add(value);
       }
       addAll(addData);
+    }
+    if (notify) {
+      streamController.sink.add(value);
+      notifyListeners();
     }
     await onDidLoad();
     return this;
@@ -65,6 +79,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       return;
     }
     add(document);
+    streamController.sink.add(value);
     notifyListeners();
   }
 
@@ -73,10 +88,12 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       return;
     }
     remove(document);
+    streamController.sink.add(value);
     notifyListeners();
   }
 
   void _notifyChildChanges() {
+    streamController.sink.add(value);
     notifyListeners();
   }
 }
