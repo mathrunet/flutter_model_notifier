@@ -3,7 +3,7 @@ part of model_notifier;
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     with ListModelMixin<T>
     implements StoredModel<List<T>> {
-  ApiCollectionModel(this.endpoint, [List<T> value = const []]) : super(value);
+  ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
   final String endpoint;
 

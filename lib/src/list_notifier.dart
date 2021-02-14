@@ -2,7 +2,7 @@ part of model_notifier;
 
 class ListNotifier<T extends Listenable> extends ChangeNotifier
     implements List<T> {
-  ListNotifier([List<T> listenables = const []]) : _listenables = listenables {
+  ListNotifier([List<T>? listenables]) : _listenables = listenables ?? [] {
     _listenables.forEach((e) => e.addListener(notifyListeners));
   }
 

@@ -1,11 +1,16 @@
 part of model_notifier;
 
+final localDocumentProvider =
+    ModelProvider.family.autoDispose<LocalDynamicDocumentModel, String>(
+  (_, path) => LocalDynamicDocumentModel(path)..load(),
+);
+
 class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
     with MapModelMixin<dynamic> {
-  LocalDynamicDocumentModel(String path, [Map<String, dynamic> map = const {}])
+  LocalDynamicDocumentModel(String path, [Map<String, dynamic>? map])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
-        super(path, map);
+        super(path, map ?? {});
 
   @override
   void notifyListeners() {
@@ -23,5 +28,5 @@ class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
 
   @override
   @protected
-  Map<String, dynamic> get initialValue => const {};
+  Map<String, dynamic> get initialValue => {};
 }

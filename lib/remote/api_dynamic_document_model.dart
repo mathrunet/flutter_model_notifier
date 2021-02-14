@@ -1,14 +1,19 @@
 part of model_notifier;
 
+final apiDocumentProvider =
+    ModelProvider.family.autoDispose<ApiDynamicDocumentModel, String>(
+  (_, endpoint) => ApiDynamicDocumentModel(endpoint)..load(),
+);
+
 class ApiDynamicDocumentModel extends ApiDocumentModel<Map<String, dynamic>>
     with MapModelMixin<dynamic> {
   ApiDynamicDocumentModel(String endpoint,
-      [Map<String, dynamic> map = const {}])
-      : super(endpoint, map);
+      [Map<String, dynamic>? map])
+      : super(endpoint, map ?? {});
 
   @override
   @protected
-  Map<String, dynamic> get initialValue => const {};
+  Map<String, dynamic> get initialValue => {};
 
   @override
   Map<String, dynamic> fromMap(Map<String, Object> map) =>

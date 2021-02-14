@@ -1,7 +1,7 @@
 part of model_notifier;
 
 abstract class MapNotifier<T> extends ChangeNotifier implements Map<String, T> {
-  MapNotifier([Map<String, T> map = const {}]) : _map = map;
+  MapNotifier([Map<String, T>? map]) : _map = map ?? {};
 
   final Map<String, T> _map;
 

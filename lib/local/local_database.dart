@@ -68,7 +68,7 @@ class _LocalDatabase {
     if (!_parentList.containsKey(path)) {
       return;
     }
-    for (final element in _parentList[path] ?? const <LocalCollectionModel>{}) {
+    for (final element in _parentList[path]!) {
       element._notifyChildChanges();
     }
   }

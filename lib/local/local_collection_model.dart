@@ -2,10 +2,10 @@ part of model_notifier;
 
 abstract class LocalCollectionModel<T extends LocalDocumentModel>
     extends ListModel<T> implements StoredModel<List<T>> {
-  LocalCollectionModel(this.path, [List<T> value = const []])
+  LocalCollectionModel(this.path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
-        super(value) {
+        super(value ?? []) {
     _LocalDatabase._registerParent(this);
   }
 

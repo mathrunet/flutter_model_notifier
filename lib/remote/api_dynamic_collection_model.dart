@@ -1,10 +1,15 @@
 part of model_notifier;
 
+final apiCollectionProvider =
+    ModelProvider.family.autoDispose<ApiDynamicCollectionModel, String>(
+  (_, endpoint) => ApiDynamicCollectionModel(endpoint)..load(),
+);
+
 class ApiDynamicCollectionModel
     extends ApiCollectionModel<Map<String, dynamic>> {
   ApiDynamicCollectionModel(String endpoint,
-      [List<MapModel<dynamic>> value = const []])
-      : super(endpoint, value);
+      [List<MapModel<dynamic>>? value])
+      : super(endpoint, value ?? []);
 
   @override
   List<Map<String, dynamic>> fromCollection(List<Object> list) =>

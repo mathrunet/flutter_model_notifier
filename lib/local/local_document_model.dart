@@ -29,7 +29,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   @mustCallSuper
   void initState() {
     super.initState();
-    value = initialValue;
+    value ??= initialValue;
   }
 
   @protected
