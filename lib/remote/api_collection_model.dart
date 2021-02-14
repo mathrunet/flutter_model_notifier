@@ -5,6 +5,12 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     implements StoredModel<List<T>> {
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
+  @override
+  bool get notifyOnChangeList => false;
+
+  @override
+  bool get notifyOnChangeValue => true;
+
   final String endpoint;
 
   String get getEndpoint => endpoint;

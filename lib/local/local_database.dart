@@ -32,7 +32,8 @@ class _LocalDatabase {
   static void _save() {
     assert(isInitialized,
         "It has not been initialized. Please execute [initialize()] to initialize it.");
-    Prefs.set("local://".toSHA1(), jsonEncode(_root));
+    final json = jsonEncode(_root);
+    Prefs.set("local://".toSHA1(), json);
   }
 
   static void _registerParent(LocalCollectionModel collection) {
@@ -63,15 +64,15 @@ class _LocalDatabase {
     }
   }
 
-  static void _notifyChildChanges(LocalDocumentModel document) {
-    final path = document.path.parentPath();
-    if (!_parentList.containsKey(path)) {
-      return;
-    }
-    for (final element in _parentList[path]!) {
-      element._notifyChildChanges();
-    }
-  }
+  // static void _notifyChildChanges(LocalDocumentModel document) {
+  //   final path = document.path.parentPath();
+  //   if (!_parentList.containsKey(path)) {
+  //     return;
+  //   }
+  //   for (final element in _parentList[path]!) {
+  //     element._notifyChildChanges();
+  //   }
+  // }
 
   static void _unregisterParent(LocalCollectionModel collection) {
     final path = collection.path;

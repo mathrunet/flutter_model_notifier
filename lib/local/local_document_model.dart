@@ -13,7 +13,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       return;
     }
     super.value = newValue;
-    _LocalDatabase._notifyChildChanges(this);
+    // _LocalDatabase._notifyChildChanges(this);
   }
 
   @override
@@ -62,18 +62,18 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
 
   @protected
   @mustCallSuper
-  Map<String, Object> filterOnLoad(Map<String, Object> loaded) => loaded;
+  Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
 
   @protected
   @mustCallSuper
-  Map<String, Object> filterOnSave(Map<String, Object> save) => save;
+  Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   @override
   Future<T> load() async {
     await _LocalDatabase.initialize();
     await onLoad();
     value = fromMap(filterOnLoad(
-        _LocalDatabase._root._readFromPath<Map<String, Object>>(path) ??
+        _LocalDatabase._root._readFromPath<Map<String, dynamic>>(path) ??
             const {}));
     streamController.sink.add(value);
     notifyListeners();

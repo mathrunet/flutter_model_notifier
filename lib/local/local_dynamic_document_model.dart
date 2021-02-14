@@ -1,7 +1,7 @@
 part of model_notifier;
 
 final localDocumentProvider =
-    ModelProvider.family.autoDispose<LocalDynamicDocumentModel, String>(
+    ModelProvider.family<LocalDynamicDocumentModel, String>(
   (_, path) => LocalDynamicDocumentModel(path)..load(),
 );
 
@@ -13,17 +13,21 @@ class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
         super(path, map ?? {});
 
   @override
-  void notifyListeners() {
-    super.notifyListeners();
-    _LocalDatabase._notifyChildChanges(this);
-  }
+  @protected
+  bool get notifyOnChangeMap => false;
+
+  // @override
+  // void notifyListeners() {
+  //   super.notifyListeners();
+  //   _LocalDatabase._notifyChildChanges(this);
+  // }
 
   @override
-  Map<String, dynamic> fromMap(Map<String, Object> map) =>
+  Map<String, dynamic> fromMap(Map<String, dynamic> map) =>
       map.cast<String, dynamic>();
 
   @override
-  Map<String, Object> toMap(Map<String, dynamic> value) =>
+  Map<String, dynamic> toMap(Map<String, dynamic> value) =>
       value.cast<String, Object>();
 
   @override

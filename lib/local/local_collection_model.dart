@@ -43,14 +43,16 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     await _LocalDatabase.initialize();
     await onLoad();
     bool notify = false;
-    final data = _LocalDatabase._root._readFromPath(path);
+    final data =
+        _LocalDatabase._root._readFromPath<Map<String, dynamic>?>(path);
     if (isNotEmpty) {
       clear();
       notify = true;
     }
-    if (data != null) {
+    if (data.isNotEmpty) {
+      notify = true;
       final addData = <T>[];
-      for (final tmp in data.entries) {
+      for (final tmp in data!.entries) {
         if (tmp.key.isEmpty || tmp.value is! Map<String, dynamic>) {
           continue;
         }
@@ -91,8 +93,8 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     notifyListeners();
   }
 
-  void _notifyChildChanges() {
-    streamController.sink.add(value);
-    notifyListeners();
-  }
+  // void _notifyChildChanges() {
+  //   streamController.sink.add(value);
+  //   notifyListeners();
+  // }
 }

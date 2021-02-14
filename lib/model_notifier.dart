@@ -27,6 +27,7 @@ export 'package:flutter_riverpod/flutter_riverpod.dart';
 export 'package:hooks_riverpod/hooks_riverpod.dart';
 export 'package:katana/katana.dart';
 
+part 'src/extensions.dart';
 part "src/model.dart";
 part "src/stored_model.dart";
 part "src/value_model.dart";
@@ -41,6 +42,7 @@ part "src/map_notifier.dart";
 part "src/list_notifier.dart";
 part "src/map_model_mixin.dart";
 part "src/list_model_mixin.dart";
+part "src/change_notifier_listener.dart";
 
 part "src/document_model.dart";
 part "src/dynamic_document_model.dart";

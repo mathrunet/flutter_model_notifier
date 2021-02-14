@@ -1,7 +1,7 @@
 part of model_notifier;
 
 final localCollectionProvider =
-    ModelProvider.family.autoDispose<LocalDynamicCollectionModel, String>(
+    ModelProvider.family<LocalDynamicCollectionModel, String>(
   (_, path) => LocalDynamicCollectionModel(path)..load(),
 );
 

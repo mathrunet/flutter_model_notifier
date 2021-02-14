@@ -162,7 +162,7 @@ packages:
       name: katana
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.0-nullsafety.17"
+    version: "0.8.0-nullsafety.19"
   matcher:
     dependency: transitive
     description:
@@ -363,7 +363,7 @@ packages:
       name: uuid
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "3.0.0-nullsafety.0"
+    version: "3.0.0-nullsafety.1"
   vector_math:
     dependency: transitive
     description:
