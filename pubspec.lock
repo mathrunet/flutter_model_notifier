@@ -162,7 +162,7 @@ packages:
       name: katana
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.0-nullsafety.19"
+    version: "0.8.0-nullsafety.20"
   matcher:
     dependency: transitive
     description:
