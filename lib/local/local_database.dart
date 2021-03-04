@@ -13,8 +13,11 @@ class _LocalDatabase {
   }
 
   static Map<String, dynamic> get _root {
-    assert(isInitialized,
-        "It has not been initialized. Please execute [initialize()] to initialize it.");
+    if (!isInitialized) {
+      debugPrint(
+          "It has not been initialized. Please execute [initialize()] to initialize it.");
+      return const {};
+    }
     if (__root == null) {
       final text = Prefs.getString("local://".toSHA1());
       if (text.isEmpty) {
@@ -30,8 +33,11 @@ class _LocalDatabase {
   static final Map<String, Set<LocalCollectionModel>> _parentList = {};
 
   static void _save() {
-    assert(isInitialized,
-        "It has not been initialized. Please execute [initialize()] to initialize it.");
+    if (!isInitialized) {
+      debugPrint(
+          "It has not been initialized. Please execute [initialize()] to initialize it.");
+      return;
+    }
     final json = jsonEncode(_root);
     Prefs.set("local://".toSHA1(), json);
   }
