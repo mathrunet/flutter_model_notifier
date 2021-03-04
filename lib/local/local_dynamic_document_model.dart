@@ -6,7 +6,7 @@ final localDocumentProvider =
 );
 
 class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
-    with MapModelMixin<dynamic> {
+    with MapModelMixin<dynamic>, LocalDocumentMetaMixin<Map<String, dynamic>> {
   LocalDynamicDocumentModel(String path, [Map<String, dynamic>? map])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),

@@ -16,6 +16,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     // _LocalDatabase._notifyChildChanges(this);
   }
 
+  String get uidValueKey => "uid";
+  String get timeValueKey => "time";
+
   @override
   @protected
   @mustCallSuper
