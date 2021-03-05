@@ -1,7 +1,8 @@
 part of model_notifier;
 
 abstract class LocalCollectionModel<T extends LocalDocumentModel>
-    extends ListModel<T> implements StoredModel<List<T>> {
+    extends ListModel<T>
+    implements StoredModel<List<T>, LocalCollectionModel<T>> {
   LocalCollectionModel(this.path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
@@ -39,7 +40,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
 
   @override
-  Future<List<T>> load() async {
+  Future<LocalCollectionModel<T>> load() async {
     await _LocalDatabase.initialize();
     await onLoad();
     bool notify = false;
@@ -71,7 +72,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   }
 
   @override
-  Future<List<T>> save() async {
+  Future<LocalCollectionModel<T>> save() async {
     throw UnimplementedError("Save process should be done for each document.");
   }
 

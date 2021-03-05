@@ -2,7 +2,7 @@ part of model_notifier;
 
 final localCollectionProvider =
     ModelProvider.family<LocalDynamicCollectionModel, String>(
-  (_, path) => LocalDynamicCollectionModel(path)..load(),
+  (_, path) => LocalDynamicCollectionModel(path),
 );
 
 class LocalDynamicCollectionModel

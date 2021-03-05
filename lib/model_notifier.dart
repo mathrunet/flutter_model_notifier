@@ -30,6 +30,7 @@ export 'package:katana/katana.dart';
 part 'src/extensions.dart';
 part 'src/functions.dart';
 part "src/model.dart";
+part "src/listened_model.dart";
 part "src/stored_model.dart";
 part "src/value_model.dart";
 part "src/list_model.dart";

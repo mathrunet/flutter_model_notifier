@@ -2,7 +2,7 @@ part of model_notifier;
 
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     with ListModelMixin<T>
-    implements StoredModel<List<T>> {
+    implements StoredModel<List<T>, ApiCollectionModel<T>> {
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
   @override
@@ -64,7 +64,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   T create() => createDocument();
 
   @override
-  Future<List<T>> load() async {
+  Future<ApiCollectionModel<T>> load() async {
     await onLoad();
     final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
     onCatchResponse(res);
@@ -77,7 +77,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   }
 
   @override
-  Future<List<T>> save() async {
+  Future<ApiCollectionModel<T>> save() async {
     await onSave();
     final res = await post(
       Uri.parse(postEndpoint),

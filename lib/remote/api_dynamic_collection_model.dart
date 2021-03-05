@@ -2,7 +2,7 @@ part of model_notifier;
 
 final apiCollectionProvider =
     ModelProvider.family<ApiDynamicCollectionModel, String>(
-  (_, endpoint) => ApiDynamicCollectionModel(endpoint)..load(),
+  (_, endpoint) => ApiDynamicCollectionModel(endpoint),
 );
 
 class ApiDynamicCollectionModel

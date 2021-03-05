@@ -1,7 +1,7 @@
 part of model_notifier;
 
 abstract class ApiDocumentModel<T> extends DocumentModel<T>
-    implements StoredModel<T> {
+    implements StoredModel<T, ApiDocumentModel<T>> {
   ApiDocumentModel(this.endpoint, T initialValue) : super(initialValue);
 
   @override
@@ -60,7 +60,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   @override
-  Future<T> load() async {
+  Future<ApiDocumentModel<T>> load() async {
     await onLoad();
     final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
     onCatchResponse(res);
@@ -68,11 +68,11 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     streamController.sink.add(value);
     notifyListeners();
     await onDidLoad();
-    return value;
+    return this;
   }
 
   @override
-  Future<T> save() async {
+  Future<ApiDocumentModel<T>> save() async {
     await onSave();
     final res = await post(
       Uri.parse(postEndpoint),
@@ -83,7 +83,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     streamController.sink.add(value);
     notifyListeners();
     await onDidSave();
-    return value;
+    return this;
   }
 
   @override

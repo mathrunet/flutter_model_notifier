@@ -1,7 +1,7 @@
 part of model_notifier;
 
 abstract class LocalDocumentModel<T> extends DocumentModel<T>
-    implements StoredModel<T> {
+    implements StoredModel<T, LocalDocumentModel<T>> {
   LocalDocumentModel(this.path, T initialValue)
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
@@ -72,7 +72,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   @override
-  Future<T> load() async {
+  Future<LocalDocumentModel<T>> load() async {
     await _LocalDatabase.initialize();
     await onLoad();
     value = fromMap(filterOnLoad(
@@ -81,11 +81,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     streamController.sink.add(value);
     notifyListeners();
     await onDidLoad();
-    return value;
+    return this;
   }
 
   @override
-  Future<T> save() async {
+  Future<LocalDocumentModel<T>> save() async {
     await _LocalDatabase.initialize();
     await onSave();
     _LocalDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
@@ -94,10 +94,10 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     streamController.sink.add(value);
     notifyListeners();
     await onDidSave();
-    return value;
+    return this;
   }
 
-  Future delete() async {
+  Future<void> delete() async {
     await _LocalDatabase.initialize();
     await onDelete();
     _LocalDatabase._root._deleteFromPath(path);

@@ -2,7 +2,7 @@ part of model_notifier;
 
 final apiDocumentProvider =
     ModelProvider.family<ApiDynamicDocumentModel, String>(
-  (_, endpoint) => ApiDynamicDocumentModel(endpoint)..load(),
+  (_, endpoint) => ApiDynamicDocumentModel(endpoint),
 );
 
 class ApiDynamicDocumentModel extends ApiDocumentModel<Map<String, dynamic>>

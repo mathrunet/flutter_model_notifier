@@ -2,7 +2,7 @@ part of model_notifier;
 
 final localDocumentProvider =
     ModelProvider.family<LocalDynamicDocumentModel, String>(
-  (_, path) => LocalDynamicDocumentModel(path)..load(),
+  (_, path) => LocalDynamicDocumentModel(path),
 );
 
 class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
