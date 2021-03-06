@@ -2,7 +2,9 @@ part of model_notifier;
 
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     with ListModelMixin<T>
-    implements StoredModel<List<T>, ApiCollectionModel<T>> {
+    implements
+        StoredModel<List<T>, ApiCollectionModel<T>>,
+        CollectionMockModel<T, ApiCollectionModel<T>> {
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
   @override
@@ -62,6 +64,16 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   T createDocument();
 
   T create() => createDocument();
+
+  @override
+  ApiCollectionModel<T> mock(List<Map<String, dynamic>> mockData) {
+    final data =
+        fromCollection(filterOnLoad(fromResponse(jsonEncode(mockData))));
+    addAll(data);
+    streamController.sink.add(value);
+    notifyListeners();
+    return this;
+  }
 
   @override
   Future<ApiCollectionModel<T>> load() async {

@@ -1,7 +1,9 @@
 part of model_notifier;
 
 abstract class LocalDocumentModel<T> extends DocumentModel<T>
-    implements StoredModel<T, LocalDocumentModel<T>> {
+    implements
+        StoredModel<T, LocalDocumentModel<T>>,
+        DocumentMockModel<T, LocalDocumentModel<T>> {
   LocalDocumentModel(this.path, T initialValue)
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
@@ -70,6 +72,14 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
+
+  @override
+  LocalDocumentModel<T> mock(Map<String, dynamic> mockData) {
+    value = fromMap(filterOnLoad(mockData));
+    streamController.sink.add(value);
+    notifyListeners();
+    return this;
+  }
 
   @override
   Future<LocalDocumentModel<T>> load() async {

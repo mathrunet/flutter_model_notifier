@@ -2,7 +2,9 @@ part of model_notifier;
 
 abstract class LocalCollectionModel<T extends LocalDocumentModel>
     extends ListModel<T>
-    implements StoredModel<List<T>, LocalCollectionModel<T>> {
+    implements
+        StoredModel<List<T>, LocalCollectionModel<T>>,
+        CollectionMockModel<T, LocalCollectionModel<T>> {
   LocalCollectionModel(this.path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
@@ -38,6 +40,30 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   T createDocument(String path);
 
   T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
+
+  @override
+  LocalCollectionModel<T> mock(List<Map<String, dynamic>> mockData) {
+    bool notify = false;
+    if (isNotEmpty) {
+      clear();
+      notify = true;
+    }
+    if (mockData.isNotEmpty) {
+      notify = true;
+      final addData = <T>[];
+      for (final tmp in mockData) {
+        final value = createDocument("$path/${tmp.hashCode}");
+        value.value = value.fromMap(value.filterOnLoad(tmp));
+        addData.add(value);
+      }
+      addAll(addData);
+    }
+    if (notify) {
+      streamController.sink.add(value);
+      notifyListeners();
+    }
+    return this;
+  }
 
   @override
   Future<LocalCollectionModel<T>> load() async {

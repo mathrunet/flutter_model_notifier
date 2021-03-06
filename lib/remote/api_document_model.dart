@@ -1,7 +1,9 @@
 part of model_notifier;
 
 abstract class ApiDocumentModel<T> extends DocumentModel<T>
-    implements StoredModel<T, ApiDocumentModel<T>> {
+    implements
+        StoredModel<T, ApiDocumentModel<T>>,
+        DocumentMockModel<T, ApiDocumentModel<T>> {
   ApiDocumentModel(this.endpoint, T initialValue) : super(initialValue);
 
   @override
@@ -58,6 +60,14 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
+
+  @override
+  ApiDocumentModel<T> mock(Map<String, dynamic> mockData) {
+    value = fromMap(filterOnLoad(fromResponse(jsonEncode(mockData))));
+    streamController.sink.add(value);
+    notifyListeners();
+    return this;
+  }
 
   @override
   Future<ApiDocumentModel<T>> load() async {

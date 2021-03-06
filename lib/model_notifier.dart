@@ -39,6 +39,8 @@ part "src/model_provider.dart";
 part "src/reference_model.dart";
 part "src/reference_list_model.dart";
 part "src/reference_map_model.dart";
+part "src/document_mock_model.dart";
+part "src/collection_mock_model.dart";
 
 part "src/map_notifier.dart";
 part "src/list_notifier.dart";
