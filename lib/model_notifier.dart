@@ -49,7 +49,6 @@ part "src/list_model_mixin.dart";
 part "src/change_notifier_listener.dart";
 
 part "src/document_model.dart";
-part "src/dynamic_document_model.dart";
 
 part "local/extensions.dart";
 part "local/local_database.dart";

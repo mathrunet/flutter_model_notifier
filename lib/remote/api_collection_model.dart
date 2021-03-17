@@ -8,6 +8,20 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
   @override
+  @protected
+  @mustCallSuper
+  void initState() {
+    super.initState();
+    if (Config.isMockup) {
+      value = fromCollection(filterOnLoad(initialMock));
+    }
+  }
+
+  @override
+  @protected
+  final List<Map<String, dynamic>> initialMock = const [];
+
+  @override
   bool get notifyOnChangeList => false;
 
   @override
@@ -18,6 +32,10 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   String get getEndpoint => endpoint;
 
   String get postEndpoint => endpoint;
+
+  String get putEndpoint => endpoint;
+
+  String get deleteEndpoint => endpoint;
 
   Map<String, String> get getHeaders => {};
 
@@ -67,10 +85,12 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
 
   @override
   ApiCollectionModel<T> mock(List<Map<String, dynamic>> mockData) {
+    if (!Config.isMockup) {
+      return this;
+    }
     final data =
         fromCollection(filterOnLoad(fromResponse(jsonEncode(mockData))));
     addAll(data);
-    streamController.sink.add(value);
     notifyListeners();
     return this;
   }
@@ -82,7 +102,6 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     onCatchResponse(res);
     final data = fromCollection(filterOnLoad(fromResponse(res.body)));
     addAll(data);
-    streamController.sink.add(value);
     notifyListeners();
     await onDidLoad();
     return this;
@@ -97,7 +116,6 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
       body: toRequest(filterOnSave(toCollection(this))),
     );
     onCatchResponse(res);
-    streamController.sink.add(value);
     notifyListeners();
     await onDidSave();
     return this;

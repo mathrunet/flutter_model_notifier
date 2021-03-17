@@ -1,6 +1,6 @@
 # Model Notifier
 
-[![Version](https://img.shields.io/badge/version-0.8.0-blue.svg)](https://mathru.net)
+[![Version](https://img.shields.io/badge/version-0.8.1-blue.svg)](https://mathru.net)
 [![Language](https://img.shields.io/badge/language-dart-blue.svg)](https://dart.dev/)
 [![License: BSD](https://img.shields.io/badge/license-BSD-purple.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
@@ -13,7 +13,7 @@ Package that makes it easy to define ValueNotifier as a model and improves the a
 Add this to your package's pubspec.yaml file:
 ```yaml
 dependencies:
-  model_notifier: ^0.8.0-nullsafety
+  model_notifier: ^0.8.1
 ```
 You should then run `flutter pub upgrade`.
 
