@@ -35,14 +35,15 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   @mustCallSuper
   void initState() {
     super.initState();
-    if (Config.isMockup) {
-      value = fromMap(filterOnLoad(initialMock));
+    if (Config.isEnabledMockup && initialMock != null) {
+      // ignore: null_check_on_nullable_type_parameter
+      value = initialMock!;
     }
   }
 
   @override
   @protected
-  final Map<String, dynamic> initialMock = const {};
+  final T? initialMock = null;
 
   final String path;
 
@@ -78,11 +79,14 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   @override
-  LocalDocumentModel<T> mock(Map<String, dynamic> mockData) {
-    if (!Config.isMockup) {
+  LocalDocumentModel<T> mock(T mockData) {
+    if (!Config.isEnabledMockup) {
       return this;
     }
-    value = fromMap(filterOnLoad(mockData));
+    if (value == mockData) {
+      return this;
+    }
+    value = mockData;
     notifyListeners();
     return this;
   }

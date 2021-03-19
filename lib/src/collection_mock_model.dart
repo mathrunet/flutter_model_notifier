@@ -12,9 +12,9 @@ abstract class CollectionMockModel<T, Result> extends ValueModel<List<T>> {
   /// Register the data for the mock.
   ///
   /// Once the data for the mock is registered, it will not be changed.
-  Result mock(List<Map<String, dynamic>> mockData);
+  Result mock(List<T> mockDataList);
 
   /// Initial value of mock.
   @protected
-  List<Map<String, dynamic>> get initialMock;
+  List<T> get initialMock;
 }

@@ -11,14 +11,15 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   @mustCallSuper
   void initState() {
     super.initState();
-    if (Config.isMockup) {
-      value = fromMap(filterOnLoad(initialMock));
+    if (Config.isEnabledMockup && initialMock != null) {
+      // ignore: null_check_on_nullable_type_parameter
+      value = initialMock!;
     }
   }
 
   @override
   @protected
-  final Map<String, dynamic> initialMock = const {};
+  final T? initialMock = null;
 
   final String endpoint;
 
@@ -69,11 +70,14 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   @override
-  ApiDocumentModel<T> mock(Map<String, dynamic> mockData) {
-    if (!Config.isMockup) {
+  ApiDocumentModel<T> mock(T mockData) {
+    if (!Config.isEnabledMockup) {
       return this;
     }
-    value = fromMap(filterOnLoad(fromResponse(jsonEncode(mockData))));
+    if (value == mockData) {
+      return this;
+    }
+    value = mockData;
     notifyListeners();
     return this;
   }

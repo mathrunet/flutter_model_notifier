@@ -14,7 +14,7 @@ abstract class ValueModel<T> extends Model<T> {
   /// The stream is also closed when the ValueModel is [dispose()].
   Stream<T> toStream() {
     if (_streamController == null) {
-      _streamController = StreamController<T>();
+      _streamController = StreamController<T>.broadcast();
       _streamController!.sink.add(value);
     }
     return _streamController!.stream;

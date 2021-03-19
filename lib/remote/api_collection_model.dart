@@ -3,6 +3,7 @@ part of model_notifier;
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     with ListModelMixin<T>
     implements
+        List<T>,
         StoredModel<List<T>, ApiCollectionModel<T>>,
         CollectionMockModel<T, ApiCollectionModel<T>> {
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
@@ -12,14 +13,19 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   @mustCallSuper
   void initState() {
     super.initState();
-    if (Config.isMockup) {
-      value = fromCollection(filterOnLoad(initialMock));
+    if (Config.isEnabledMockup) {
+      if (isNotEmpty) {
+        return;
+      }
+      if (initialMock.isNotEmpty) {
+        addAll(initialMock);
+      }
     }
   }
 
   @override
   @protected
-  final List<Map<String, dynamic>> initialMock = const [];
+  final List<T> initialMock = const [];
 
   @override
   bool get notifyOnChangeList => false;
@@ -84,14 +90,17 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   T create() => createDocument();
 
   @override
-  ApiCollectionModel<T> mock(List<Map<String, dynamic>> mockData) {
-    if (!Config.isMockup) {
+  ApiCollectionModel<T> mock(List<T> mockDataList) {
+    if (!Config.isEnabledMockup) {
       return this;
     }
-    final data =
-        fromCollection(filterOnLoad(fromResponse(jsonEncode(mockData))));
-    addAll(data);
-    notifyListeners();
+    if (isNotEmpty) {
+      return this;
+    }
+    if (mockDataList.isNotEmpty) {
+      addAll(mockDataList);
+      notifyListeners();
+    }
     return this;
   }
 

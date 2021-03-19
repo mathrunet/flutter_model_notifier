@@ -17,22 +17,19 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   @mustCallSuper
   void initState() {
     super.initState();
-    if (Config.isMockup) {
+    if (Config.isEnabledMockup) {
+      if (isNotEmpty) {
+        return;
+      }
       if (initialMock.isNotEmpty) {
-        final addData = <T>[];
-        for (final tmp in initialMock) {
-          final value = createDocument("$path/${tmp.hashCode}");
-          value.value = value.fromMap(value.filterOnLoad(tmp));
-          addData.add(value);
-        }
-        addAll(addData);
+        addAll(initialMock);
       }
     }
   }
 
   @override
   @protected
-  final List<Map<String, dynamic>> initialMock = const [];
+  final List<T> initialMock = const [];
 
   @override
   bool get notifyOnChangeList => false;
@@ -64,26 +61,15 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
 
   @override
-  LocalCollectionModel<T> mock(List<Map<String, dynamic>> mockData) {
-    if (!Config.isMockup) {
+  LocalCollectionModel<T> mock(List<T> mockDataList) {
+    if (!Config.isEnabledMockup) {
       return this;
     }
-    bool notify = false;
     if (isNotEmpty) {
-      clear();
-      notify = true;
+      return this;
     }
-    if (mockData.isNotEmpty) {
-      notify = true;
-      final addData = <T>[];
-      for (final tmp in mockData) {
-        final value = createDocument("$path/${tmp.hashCode}");
-        value.value = value.fromMap(value.filterOnLoad(tmp));
-        addData.add(value);
-      }
-      addAll(addData);
-    }
-    if (notify) {
+    if (mockDataList.isNotEmpty) {
+      addAll(mockDataList);
       notifyListeners();
     }
     return this;
