@@ -1,14 +1,38 @@
 part of model_notifier;
 
+/// Base class for holding and manipulating data from a local database as a document of [T].
+///
+/// The [load()] method retrieves the value from the local database and
+/// the [save()] method saves the value to the local database.
+///
+/// The local database is a Json database.
+/// Specify a path to specify the location of the contents.
+///
+/// In addition, since it can be used as [Map],
+/// it is possible to operate the content as it is.
 abstract class LocalDocumentModel<T> extends DocumentModel<T>
     implements
         StoredModel<T, LocalDocumentModel<T>>,
         DocumentMockModel<T, LocalDocumentModel<T>> {
+  /// Base class for holding and manipulating data from a local database as a document of [T].
+  ///
+  /// The [load()] method retrieves the value from the local database and
+  /// the [save()] method saves the value to the local database.
+  ///
+  /// The local database is a Json database.
+  /// Specify a path to specify the location of the contents.
+  ///
+  /// In addition, since it can be used as [Map],
+  /// it is possible to operate the content as it is.
   LocalDocumentModel(this.path, T initialValue)
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
         super(initialValue);
 
+  /// The current value stored in this notifier.
+  ///
+  /// When the value is replaced with something that is not equal to the old value as evaluated by the equality operator ==,
+  /// this class notifies its listeners.
   @override
   set value(T newValue) {
     if (super.value == newValue) {
@@ -18,10 +42,19 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     // _LocalDatabase._notifyChildChanges(this);
   }
 
+  /// Key for UID values.
   final String uidValueKey = "uid";
+
+  /// Key for time values.
   final String timeValueKey = "time";
+
+  /// Key for locale values.
   final String localeValueKey = "@locale";
 
+  /// Discards any resources used by the object.
+  /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).
+  ///
+  /// This method should only be called by the object's owner.
   @override
   @protected
   @mustCallSuper
@@ -30,6 +63,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     _LocalDatabase._removeChild(this);
   }
 
+  /// The method to be executed when initialization is performed.
   @override
   @protected
   @mustCallSuper
@@ -41,43 +75,61 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     }
   }
 
+  /// Initial value of mock.
   @override
   @protected
   final T? initialMock = null;
 
+  /// Path of the local database.
   final String path;
 
+  /// Callback before the load has been done.
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
+
+  /// Callback before the save has been done.
   @protected
   @mustCallSuper
   Future<void> onSave() async {}
 
+  /// Callback before the delete has been done.
   @protected
   @mustCallSuper
   Future<void> onDelete() async {}
 
+  /// Callback after the load has been done.
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
 
+  /// Callback after the save has been done.
   @protected
   @mustCallSuper
   Future<void> onDidSave() async {}
 
+  /// Callback after the delete has been done.
   @protected
   @mustCallSuper
   Future<void> onDidDelete() async {}
 
+  /// You can filter the loaded content when it is loaded.
+  ///
+  /// Edit the value of [loaded] and return.
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
 
+  /// You can filter the saving content when it is saving.
+  ///
+  /// Edit the value of [save] and return.
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
+  /// Register the data for the mock.
+  ///
+  /// Once the data for the mock is registered, it will not be changed.
   @override
   LocalDocumentModel<T> mock(T mockData) {
     if (!Config.isEnabledMockup) {
@@ -91,6 +143,12 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Retrieves data and updates the data in the model.
+  ///
+  /// You will be notified of model updates at the time they are retrieved.
+  ///
+  /// In addition,
+  /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> load() async {
     await _LocalDatabase.initialize();
@@ -103,6 +161,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Data stored in the model is stored in a database external to the app that is tied to the model.
+  ///
+  /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> save() async {
     await _LocalDatabase.initialize();
@@ -115,6 +176,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Deletes the document.
+  ///
+  /// Deleted documents are immediately reflected and removed from related collections, etc.
   Future<void> delete() async {
     await _LocalDatabase.initialize();
     await onDelete();

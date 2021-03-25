@@ -2,8 +2,6 @@ part of model_notifier;
 
 class _LocalDatabase {
   _LocalDatabase._();
-
-  /// True if initialization has been completed.
   static bool get isInitialized => Prefs.isInitialized;
   static Future initialize() async {
     if (isInitialized) {

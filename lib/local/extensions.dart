@@ -1,12 +1,6 @@
 part of model_notifier;
 
-/// Map extension methods.
 extension _LocalStringMapExtensions on Map<String, dynamic> {
-  /// Reads data from a tree-structured map using paths.
-  ///
-  /// If there is no data, null is returned.
-  ///
-  /// [path]: The data path to read.
   T? _readFromPath<T>(String path) {
     final paths = path.split("/");
     if (paths.isEmpty) {
@@ -29,12 +23,6 @@ extension _LocalStringMapExtensions on Map<String, dynamic> {
     return this[p];
   }
 
-  /// Writes data to the tree structure map.
-  ///
-  /// A map will be created even if there is no intermediate tree.
-  ///
-  /// [path]: The path of data to write.
-  /// [value]: The data to write.
   void _writeToPath(String path, dynamic value) {
     final paths = path.split("/");
     if (paths.isEmpty) {
@@ -62,11 +50,6 @@ extension _LocalStringMapExtensions on Map<String, dynamic> {
         ._writeToPathInternal(paths, index + 1, value);
   }
 
-  /// Deletes the data of the specified path from the tree structure data.
-  ///
-  /// All data under that path will be deleted.
-  ///
-  /// [path]: The path of data to delete.
   void _deleteFromPath(String path) {
     final paths = path.split("/");
     if (paths.isEmpty) {

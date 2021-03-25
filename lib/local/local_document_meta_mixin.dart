@@ -1,5 +1,8 @@
 part of model_notifier;
 
+/// Mix-in that completes the document metadata (time, UID, etc.) on Save.
+/// 
+/// You can save the metadata just by including this mix-in.
 mixin LocalDocumentMetaMixin<T> on LocalDocumentModel<T> {
   @override
   @protected

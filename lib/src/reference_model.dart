@@ -1,6 +1,10 @@
 part of model_notifier;
 
+/// This model creates a new provider
+/// by registering multiple providers together in the [build] method and spitting out the [T] data.
 abstract class ReferenceModel<T> extends ValueModel<T> {
+  /// This model creates a new provider
+  /// by registering multiple providers together in the [build] method and spitting out the [T] data.
   ReferenceModel(this.ref, T initialValue) : super(initialValue) {
     final futureOr = build(ref);
     if (futureOr is Future<T>) {
@@ -9,6 +13,7 @@ abstract class ReferenceModel<T> extends ValueModel<T> {
       _handledOnUpdated(futureOr);
     }
   }
+  /// Provider reference.
   final ProviderReference ref;
 
   /// The equality operator.
@@ -61,5 +66,8 @@ abstract class ReferenceModel<T> extends ValueModel<T> {
     value = newValue;
   }
 
+  /// The process of combining models to create data.
+  /// 
+  /// You can run the [ref.watch()] method to listen for updates in other models and notify you of updates in this model.
   FutureOr<T> build(ProviderReference ref);
 }

@@ -1,6 +1,10 @@
 part of model_notifier;
 
+/// This model creates a new provider
+/// by registering multiple providers together in the [build] method and spitting out the [Map] data.
 abstract class ReferenceMapModel<T> extends MapModel<T> {
+  /// This model creates a new provider
+  /// by registering multiple providers together in the [build] method and spitting out the [Map] data.
   ReferenceMapModel(this.ref) : super() {
     final futureOr = build(ref);
     if (futureOr is Future<Map<String, T>>) {
@@ -9,6 +13,7 @@ abstract class ReferenceMapModel<T> extends MapModel<T> {
       _handledOnUpdated(futureOr);
     }
   }
+  /// Provider reference.
   final ProviderReference ref;
 
   /// The equality operator.
@@ -77,5 +82,8 @@ abstract class ReferenceMapModel<T> extends MapModel<T> {
     return true;
   }
 
+  /// The process of combining models to create data.
+  /// 
+  /// You can run the [ref.watch()] method to listen for updates in other models and notify you of updates in this model.
   FutureOr<Map<String, T>> build(ProviderReference ref);
 }
