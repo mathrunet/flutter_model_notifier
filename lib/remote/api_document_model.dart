@@ -1,11 +1,24 @@
 part of model_notifier;
 
+/// Class that can retrieve data from the RestAPI and store it as a document.
+/// 
+/// Basically, you get a  Map as a response of RestAPI and use it by converting it.
+/// The data is converted using [fromResponse] and [toRequest].
+/// 
+/// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
 abstract class ApiDocumentModel<T> extends DocumentModel<T>
     implements
         StoredModel<T, ApiDocumentModel<T>>,
         DocumentMockModel<T, ApiDocumentModel<T>> {
+  /// Class that can retrieve data from the RestAPI and store it as a document.
+  /// 
+  /// Basically, you get a  Map as a response of RestAPI and use it by converting it.
+  /// The data is converted using [fromResponse] and [toRequest].
+  /// 
+  /// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
   ApiDocumentModel(this.endpoint, T initialValue) : super(initialValue);
 
+  /// The method to be executed when initialization is performed.
   @override
   @protected
   @mustCallSuper
@@ -17,58 +30,90 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     }
   }
 
+  /// Initial value of mock.
   @override
   @protected
   final T? initialMock = null;
 
+  /// API endpoints.
   final String endpoint;
 
+  /// The endpoint to use when executing the Get method.
   String get getEndpoint => endpoint;
 
+  /// The endpoint to use when executing the Post method.
   String get postEndpoint => endpoint;
 
+  /// The endpoint to use when executing the Put method.
   String get putEndpoint => endpoint;
 
+  /// The endpoint to use when executing the Delete method.
   String get deleteEndpoint => endpoint;
 
+  /// header when executing the Get method.
   Map<String, String> get getHeaders => {};
 
+  /// header when executing the Post method.
   Map<String, String> get postHeaders => {};
+  
+  /// header when executing the Put method.
+  Map<String, String> get putHeaders => {};
+  
+  /// header when executing the Delete method.
+  Map<String, String> get deleteHeaders => {};
 
+  /// Callback before the load has been done.
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
 
+  /// Callback before the save has been done.
   @protected
   @mustCallSuper
   Future<void> onSave() async {}
 
+  /// Callback after the load has been done.
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
 
+  /// Callback after the save has been done.
   @protected
   @mustCallSuper
   Future<void> onDidSave() async {}
 
+  /// Callback to catch what to do with the response.
+  /// 
+  /// Throwing Exceptions on responses, etc.
   @protected
   @mustCallSuper
   void onCatchResponse(Response response) {}
 
+  /// Callback for converting to a map of objects for a response.
   @protected
   Map<String, dynamic> fromResponse(String json) => jsonDecodeAsMap(json);
 
+  /// Callback for converting internal map data to request data.
   @protected
   dynamic toRequest(Map<String, dynamic> map) => jsonEncode(map);
 
+  /// You can filter the loaded content when it is loaded.
+  ///
+  /// Edit the value of [loaded] and return.
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
 
+  /// You can filter the saving content when it is saving.
+  ///
+  /// Edit the value of [save] and return.
   @protected
   @mustCallSuper
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
+  /// Register the data for the mock.
+  /// 
+  /// Once the data for the mock is registered, it will not be changed.
   @override
   ApiDocumentModel<T> mock(T mockData) {
     if (!Config.isEnabledMockup) {
@@ -82,6 +127,12 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Retrieves data and updates the data in the model.
+  /// 
+  /// You will be notified of model updates at the time they are retrieved.
+  /// 
+  /// In addition,
+  /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiDocumentModel<T>> load() async {
     await onLoad();
@@ -93,6 +144,9 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Data stored in the model is stored in a database external to the app that is tied to the model.
+  /// 
+  /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiDocumentModel<T>> save() async {
     await onSave();
