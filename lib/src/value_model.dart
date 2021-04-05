@@ -1,15 +1,15 @@
 part of model_notifier;
 
 /// [Model] which only stores one value.
-/// 
+///
 /// It can be used in the same way as [ValueNotifier].
-/// 
+///
 /// You can also use [toString()] to convert it to a [Stream].
 abstract class ValueModel<T> extends Model<T> {
   /// [Model] which only stores one value.
-  /// 
+  ///
   /// It can be used in the same way as [ValueNotifier].
-  /// 
+  ///
   /// You can also use [toString()] to convert it to a [Stream].
   ValueModel(T value)
       : _value = value,

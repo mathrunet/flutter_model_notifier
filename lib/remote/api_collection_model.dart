@@ -1,10 +1,10 @@
 part of model_notifier;
 
 /// Class that can retrieve data from the RestAPI and store it as a collection of value.
-/// 
+///
 /// Basically, you get a List of Map or a Map of Map as a response of RestAPI and use it by converting it.
 /// The data is converted using [fromResponse] and [toRequest].
-/// 
+///
 /// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
 abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     with ListModelMixin<T>
@@ -13,10 +13,10 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
         StoredModel<List<T>, ApiCollectionModel<T>>,
         CollectionMockModel<T, ApiCollectionModel<T>> {
   /// Class that can retrieve data from the RestAPI and store it as a collection of value.
-  /// 
+  ///
   /// Basically, you get a List of Map or a Map of Map as a response of RestAPI and use it by converting it.
   /// The data is converted using [fromCollection] and [toCollection].
-  /// 
+  ///
   /// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
   ApiCollectionModel(this.endpoint, [List<T>? value]) : super(value ?? []);
 
@@ -71,10 +71,10 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
 
   /// header when executing the Post method.
   Map<String, String> get postHeaders => {};
-  
+
   /// header when executing the Put method.
   Map<String, String> get putHeaders => {};
-  
+
   /// header when executing the Delete method.
   Map<String, String> get deleteHeaders => {};
 
@@ -105,7 +105,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   Future<void> onDidSave() async {}
 
   /// Callback to catch what to do with the response.
-  /// 
+  ///
   /// Throwing Exceptions on responses, etc.
   @protected
   @mustCallSuper
@@ -141,7 +141,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   T create() => createDocument();
 
   /// Register the data for the mock.
-  /// 
+  ///
   /// Once the data for the mock is registered, it will not be changed.
   @override
   ApiCollectionModel<T> mock(List<T> mockDataList) {
@@ -159,9 +159,9 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   }
 
   /// Retrieves data and updates the data in the model.
-  /// 
+  ///
   /// You will be notified of model updates at the time they are retrieved.
-  /// 
+  ///
   /// In addition,
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
@@ -177,7 +177,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
-  /// 
+  ///
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiCollectionModel<T>> save() async {
@@ -190,6 +190,26 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     onCatchResponse(res);
     notifyListeners();
     await onDidSave();
+    return this;
+  }
+
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<ApiCollectionModel<T>> reload() => load();
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<ApiCollectionModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
     return this;
   }
 }

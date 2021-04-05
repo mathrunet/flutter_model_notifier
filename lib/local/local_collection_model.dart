@@ -1,13 +1,13 @@
 part of model_notifier;
 
 /// Base class for holding and manipulating data from a local database as a collection of [LocalDocumentModel].
-/// 
+///
 /// The [load()] method retrieves the value from the local database and
 /// the [save()] method saves the value to the local database.
-/// 
+///
 /// The local database is a Json database.
 /// Specify a path to specify the location of the contents.
-/// 
+///
 /// In addition, since it can be used as [List],
 /// it is possible to operate the content as it is.
 abstract class LocalCollectionModel<T extends LocalDocumentModel>
@@ -16,13 +16,13 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         StoredModel<List<T>, LocalCollectionModel<T>>,
         CollectionMockModel<T, LocalCollectionModel<T>> {
   /// Base class for holding and manipulating data from a local database as a collection of [LocalDocumentModel].
-  /// 
+  ///
   /// The [load()] method retrieves the value from the local database and
   /// the [save()] method saves the value to the local database.
-  /// 
+  ///
   /// The local database is a Json database.
   /// Specify a path to specify the location of the contents.
-  /// 
+  ///
   /// In addition, since it can be used as [List],
   /// it is possible to operate the content as it is.
   LocalCollectionModel(this.path, [List<T>? value])
@@ -65,7 +65,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
 
   /// Discards any resources used by the object.
   /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).
-  /// 
+  ///
   /// This method should only be called by the object's owner.
   @override
   @protected
@@ -93,12 +93,12 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   T createDocument(String path);
 
   /// Create a new document.
-  /// 
+  ///
   /// id] is the ID of the document. If it is blank, [uuid] is used.
   T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
 
   /// Register the data for the mock.
-  /// 
+  ///
   /// Once the data for the mock is registered, it will not be changed.
   @override
   LocalCollectionModel<T> mock(List<T> mockDataList) {
@@ -116,9 +116,9 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   }
 
   /// Retrieves data and updates the data in the model.
-  /// 
+  ///
   /// You will be notified of model updates at the time they are retrieved.
-  /// 
+  ///
   /// In addition,
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
@@ -153,11 +153,31 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
-  /// 
+  ///
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalCollectionModel<T>> save() async {
     throw UnimplementedError("Save process should be done for each document.");
+  }
+
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<LocalCollectionModel<T>> reload() => load();
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<LocalCollectionModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
+    return this;
   }
 
   void _addChildInternal(T document) {

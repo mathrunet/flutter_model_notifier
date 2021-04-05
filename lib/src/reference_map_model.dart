@@ -13,6 +13,7 @@ abstract class ReferenceMapModel<T> extends MapModel<T> {
       _handledOnUpdated(futureOr);
     }
   }
+
   /// Provider reference.
   final ProviderReference ref;
 
@@ -83,7 +84,7 @@ abstract class ReferenceMapModel<T> extends MapModel<T> {
   }
 
   /// The process of combining models to create data.
-  /// 
+  ///
   /// You can run the [ref.watch()] method to listen for updates in other models and notify you of updates in this model.
   FutureOr<Map<String, T>> build(ProviderReference ref);
 }

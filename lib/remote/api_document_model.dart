@@ -1,20 +1,20 @@
 part of model_notifier;
 
 /// Class that can retrieve data from the RestAPI and store it as a document.
-/// 
+///
 /// Basically, you get a  Map as a response of RestAPI and use it by converting it.
 /// The data is converted using [fromResponse] and [toRequest].
-/// 
+///
 /// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
 abstract class ApiDocumentModel<T> extends DocumentModel<T>
     implements
         StoredModel<T, ApiDocumentModel<T>>,
         DocumentMockModel<T, ApiDocumentModel<T>> {
   /// Class that can retrieve data from the RestAPI and store it as a document.
-  /// 
+  ///
   /// Basically, you get a  Map as a response of RestAPI and use it by converting it.
   /// The data is converted using [fromResponse] and [toRequest].
-  /// 
+  ///
   /// Use `get` in the [load()] method and `post` in the [save()] method as HTTP methods.
   ApiDocumentModel(this.endpoint, T initialValue) : super(initialValue);
 
@@ -55,10 +55,10 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
 
   /// header when executing the Post method.
   Map<String, String> get postHeaders => {};
-  
+
   /// header when executing the Put method.
   Map<String, String> get putHeaders => {};
-  
+
   /// header when executing the Delete method.
   Map<String, String> get deleteHeaders => {};
 
@@ -83,7 +83,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   Future<void> onDidSave() async {}
 
   /// Callback to catch what to do with the response.
-  /// 
+  ///
   /// Throwing Exceptions on responses, etc.
   @protected
   @mustCallSuper
@@ -112,7 +112,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
 
   /// Register the data for the mock.
-  /// 
+  ///
   /// Once the data for the mock is registered, it will not be changed.
   @override
   ApiDocumentModel<T> mock(T mockData) {
@@ -128,9 +128,9 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   }
 
   /// Retrieves data and updates the data in the model.
-  /// 
+  ///
   /// You will be notified of model updates at the time they are retrieved.
-  /// 
+  ///
   /// In addition,
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
@@ -145,7 +145,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
-  /// 
+  ///
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiDocumentModel<T>> save() async {
@@ -158,6 +158,26 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     onCatchResponse(res);
     notifyListeners();
     await onDidSave();
+    return this;
+  }
+
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<ApiDocumentModel<T>> reload() => load();
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<ApiDocumentModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
     return this;
   }
 

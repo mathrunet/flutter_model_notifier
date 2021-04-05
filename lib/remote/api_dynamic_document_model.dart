@@ -15,10 +15,6 @@ class ApiDynamicDocumentModel extends ApiDocumentModel<Map<String, dynamic>>
   bool get notifyOnChangeMap => false;
 
   @override
-  @protected
-  Map<String, dynamic> get initialValue => {};
-
-  @override
   Map<String, dynamic> fromMap(Map<String, dynamic> map) =>
       map.cast<String, dynamic>();
 

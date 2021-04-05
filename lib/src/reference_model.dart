@@ -13,6 +13,7 @@ abstract class ReferenceModel<T> extends ValueModel<T> {
       _handledOnUpdated(futureOr);
     }
   }
+
   /// Provider reference.
   final ProviderReference ref;
 
@@ -67,7 +68,7 @@ abstract class ReferenceModel<T> extends ValueModel<T> {
   }
 
   /// The process of combining models to create data.
-  /// 
+  ///
   /// You can run the [ref.watch()] method to listen for updates in other models and notify you of updates in this model.
   FutureOr<T> build(ProviderReference ref);
 }

@@ -176,6 +176,26 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
     return this;
   }
 
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<LocalDocumentModel<T>> reload() => load();
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<LocalDocumentModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
+    return this;
+  }
+
   /// Deletes the document.
   ///
   /// Deleted documents are immediately reflected and removed from related collections, etc.
