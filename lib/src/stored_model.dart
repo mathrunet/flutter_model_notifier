@@ -33,4 +33,30 @@ abstract class StoredModel<T, Result extends Model<T>> extends Model<T> {
 
   /// Return `true` if data is not empty.
   bool get isNotEmpty;
+
+  /// Returns itself after the load finishes.
+  Future<Result> get loading;
+
+  /// Returns itself after the save finishes.
+  Future<Result> get saving;
+
+  /// Callback before the load has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onLoad();
+
+  /// Callback before the save has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onSave();
+
+  /// Callback after the load has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onDidLoad();
+
+  /// Callback after the save has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onDidSave();
 }

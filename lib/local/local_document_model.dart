@@ -83,12 +83,30 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// Path of the local database.
   final String path;
 
+  /// Returns itself after the load finishes.
+  @override
+  Future<LocalDocumentModel<T>> get loading =>
+      _loadingCompleter?.future ?? Future.value(this);
+  Completer<LocalDocumentModel<T>>? _loadingCompleter;
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<LocalDocumentModel<T>> get saving =>
+      _savingCompleter?.future ?? Future.value(this);
+  Completer<LocalDocumentModel<T>>? _savingCompleter;
+
+  /// Returns itself after the delete finishes.
+  Future<void> get deleting => _deletingCompleter?.future ?? Future.value();
+  Completer<void>? _deletingCompleter;
+
   /// Callback before the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
 
   /// Callback before the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onSave() async {}
@@ -99,11 +117,13 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   Future<void> onDelete() async {}
 
   /// Callback after the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
 
   /// Callback after the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidSave() async {}
@@ -151,13 +171,25 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> load() async {
-    await _LocalDatabase.initialize();
-    await onLoad();
-    value = fromMap(filterOnLoad(
-        _LocalDatabase._root._readFromPath<Map<String, dynamic>>(path) ??
-            const {}));
-    notifyListeners();
-    await onDidLoad();
+    if (_loadingCompleter != null) {
+      return loading;
+    }
+    _loadingCompleter = Completer<LocalDocumentModel<T>>();
+    try {
+      await _LocalDatabase.initialize();
+      await onLoad();
+      value = fromMap(filterOnLoad(
+          _LocalDatabase._root._readFromPath<Map<String, dynamic>>(path) ??
+              const {}));
+      notifyListeners();
+      await onDidLoad();
+      _loadingCompleter?.complete(this);
+      _loadingCompleter = null;
+    } catch (e) {
+      _loadingCompleter?.completeError(e);
+      _loadingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 
@@ -166,13 +198,25 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> save() async {
-    await _LocalDatabase.initialize();
-    await onSave();
-    _LocalDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
-    _LocalDatabase._addChild(this);
-    _LocalDatabase._save();
-    notifyListeners();
-    await onDidSave();
+    if (_savingCompleter != null) {
+      return saving;
+    }
+    _savingCompleter = Completer<LocalDocumentModel<T>>();
+    try {
+      await _LocalDatabase.initialize();
+      await onSave();
+      _LocalDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
+      _LocalDatabase._addChild(this);
+      _LocalDatabase._save();
+      notifyListeners();
+      await onDidSave();
+      _savingCompleter?.complete(this);
+      _savingCompleter = null;
+    } catch (e) {
+      _savingCompleter?.completeError(e);
+      _savingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 
@@ -200,13 +244,25 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   ///
   /// Deleted documents are immediately reflected and removed from related collections, etc.
   Future<void> delete() async {
-    await _LocalDatabase.initialize();
-    await onDelete();
-    _LocalDatabase._root._deleteFromPath(path);
-    _LocalDatabase._removeChild(this);
-    _LocalDatabase._save();
-    notifyListeners();
-    await onDidDelete();
+    if (_deletingCompleter != null) {
+      return deleting;
+    }
+    _deletingCompleter = Completer<LocalDocumentModel<T>>();
+    try {
+      await _LocalDatabase.initialize();
+      await onDelete();
+      _LocalDatabase._root._deleteFromPath(path);
+      _LocalDatabase._removeChild(this);
+      _LocalDatabase._save();
+      notifyListeners();
+      await onDidDelete();
+      _deletingCompleter?.complete();
+      _deletingCompleter = null;
+    } catch (e) {
+      _deletingCompleter?.completeError(e);
+      _deletingCompleter = null;
+      rethrow;
+    }
   }
 
   /// The equality operator.

@@ -62,22 +62,38 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   /// header when executing the Delete method.
   Map<String, String> get deleteHeaders => {};
 
+  /// Returns itself after the load finishes.
+  @override
+  Future<ApiDocumentModel<T>> get loading =>
+      _loadingCompleter?.future ?? Future.value(this);
+  Completer<ApiDocumentModel<T>>? _loadingCompleter;
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<ApiDocumentModel<T>> get saving =>
+      _savingCompleter?.future ?? Future.value(this);
+  Completer<ApiDocumentModel<T>>? _savingCompleter;
+
   /// Callback before the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
 
   /// Callback before the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onSave() async {}
 
   /// Callback after the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
 
   /// Callback after the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidSave() async {}
@@ -135,12 +151,24 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiDocumentModel<T>> load() async {
-    await onLoad();
-    final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
-    onCatchResponse(res);
-    value = fromMap(filterOnLoad(fromResponse(res.body)));
-    notifyListeners();
-    await onDidLoad();
+    if (_loadingCompleter != null) {
+      return loading;
+    }
+    _loadingCompleter = Completer<ApiDocumentModel<T>>();
+    try {
+      await onLoad();
+      final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
+      onCatchResponse(res);
+      value = fromMap(filterOnLoad(fromResponse(res.body)));
+      notifyListeners();
+      await onDidLoad();
+      _loadingCompleter?.complete(this);
+      _loadingCompleter = null;
+    } catch (e) {
+      _loadingCompleter?.completeError(e);
+      _loadingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 
@@ -149,15 +177,27 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiDocumentModel<T>> save() async {
-    await onSave();
-    final res = await post(
-      Uri.parse(postEndpoint),
-      headers: postHeaders,
-      body: toRequest(filterOnSave(toMap(value))),
-    );
-    onCatchResponse(res);
-    notifyListeners();
-    await onDidSave();
+    if (_savingCompleter != null) {
+      return saving;
+    }
+    _savingCompleter = Completer<ApiDocumentModel<T>>();
+    try {
+      await onSave();
+      final res = await post(
+        Uri.parse(postEndpoint),
+        headers: postHeaders,
+        body: toRequest(filterOnSave(toMap(value))),
+      );
+      onCatchResponse(res);
+      notifyListeners();
+      await onDidSave();
+      _savingCompleter?.complete(this);
+      _savingCompleter = null;
+    } catch (e) {
+      _savingCompleter?.completeError(e);
+      _savingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 

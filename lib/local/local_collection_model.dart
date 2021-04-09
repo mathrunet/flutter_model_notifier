@@ -78,15 +78,42 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// Path of the local database.
   final String path;
 
+  /// Returns itself after the load finishes.
+  @override
+  Future<LocalCollectionModel<T>> get loading =>
+      _loadingCompleter?.future ?? Future.value(this);
+  Completer<LocalCollectionModel<T>>? _loadingCompleter;
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<LocalCollectionModel<T>> get saving => throw UnimplementedError(
+      "Save process should be done for each document.");
+
   /// Callback before the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
 
   /// Callback after the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
+
+  /// Callback after the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onSave() async => throw UnimplementedError(
+      "Save process should be done for each document.");
+
+  /// Callback after the save has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onDidSave() async => throw UnimplementedError(
+      "Save process should be done for each document.");
 
   /// Add a process to create a document object.
   @protected
@@ -123,32 +150,44 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalCollectionModel<T>> load() async {
-    await _LocalDatabase.initialize();
-    await onLoad();
-    bool notify = false;
-    final data =
-        _LocalDatabase._root._readFromPath<Map<String, dynamic>?>(path);
-    if (isNotEmpty) {
-      clear();
-      notify = true;
+    if (_loadingCompleter != null) {
+      return loading;
     }
-    if (data.isNotEmpty) {
-      notify = true;
-      final addData = <T>[];
-      for (final tmp in data!.entries) {
-        if (tmp.key.isEmpty || tmp.value is! Map<String, dynamic>) {
-          continue;
-        }
-        final value = createDocument("$path/${tmp.key}");
-        value.value = value.fromMap(value.filterOnLoad(tmp.value));
-        addData.add(value);
+    _loadingCompleter = Completer<LocalCollectionModel<T>>();
+    try {
+      await _LocalDatabase.initialize();
+      await onLoad();
+      bool notify = false;
+      final data =
+          _LocalDatabase._root._readFromPath<Map<String, dynamic>?>(path);
+      if (isNotEmpty) {
+        clear();
+        notify = true;
       }
-      addAll(addData);
+      if (data.isNotEmpty) {
+        notify = true;
+        final addData = <T>[];
+        for (final tmp in data!.entries) {
+          if (tmp.key.isEmpty || tmp.value is! Map<String, dynamic>) {
+            continue;
+          }
+          final value = createDocument("$path/${tmp.key}");
+          value.value = value.fromMap(value.filterOnLoad(tmp.value));
+          addData.add(value);
+        }
+        addAll(addData);
+      }
+      if (notify) {
+        notifyListeners();
+      }
+      await onDidLoad();
+      _loadingCompleter?.complete(this);
+      _loadingCompleter = null;
+    } catch (e) {
+      _loadingCompleter?.completeError(e);
+      _loadingCompleter = null;
+      rethrow;
     }
-    if (notify) {
-      notifyListeners();
-    }
-    await onDidLoad();
     return this;
   }
 

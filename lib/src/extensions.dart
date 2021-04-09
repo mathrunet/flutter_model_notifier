@@ -19,3 +19,24 @@ extension ChangeNotifierMapExtensions<T extends ChangeNotifier> on Iterable<T> {
     }).toList();
   }
 }
+
+extension NullableAsyncValueExtensions<T> on AsyncValue<T>? {
+  /// Get the value.
+  ///
+  /// If it is itself null or the value is null, [defaultValue] is returned.
+  T value(T defaultValue) {
+    if (this == null) {
+      return defaultValue;
+    }
+    return this!.data?.value ?? defaultValue;
+  }
+}
+
+extension AsyncValueExtensions<T> on AsyncValue<T> {
+  /// Get the value.
+  ///
+  /// If it is itself null or the value is null, [defaultValue] is returned.
+  T value(T defaultValue) {
+    return data?.value ?? defaultValue;
+  }
+}

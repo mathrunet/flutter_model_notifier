@@ -15,19 +15,18 @@ abstract class ValueModel<T> extends Model<T> {
       : _value = value,
         super();
 
-  StreamController<T>? _streamController;
+  final Map<Function, ValueNotifier> _valueNotifiers = {};
 
-  /// Generates a stream.
+  /// Generates a value notifier.
   ///
-  /// Whenever a value is updated, the value of the stream is also updated.
+  /// Whenever a value is updated, the value of the notifier is also updated.
   ///
-  /// The stream is also closed when the ValueModel is [dispose()].
-  Stream<T> toStream() {
-    if (_streamController == null) {
-      _streamController = StreamController<T>.broadcast();
-      _streamController!.sink.add(value);
+  /// The notifier is also closed when the ValueModel is [dispose()].
+  ValueNotifier<V> toNotifier<V>(V Function(T value) converter) {
+    if (_valueNotifiers.containsKey(converter)) {
+      return _valueNotifiers[converter]! as ValueNotifier<V>;
     }
-    return _streamController!.stream;
+    return _valueNotifiers[converter] = ValueNotifier<V>(converter.call(value));
   }
 
   /// Discards any resources used by the object. After this is called, the
@@ -41,7 +40,8 @@ abstract class ValueModel<T> extends Model<T> {
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _streamController?.close();
+    _valueNotifiers.values.forEach((element) => element.dispose());
+    _valueNotifiers.clear();
   }
 
   /// Call all the registered listeners.
@@ -63,7 +63,9 @@ abstract class ValueModel<T> extends Model<T> {
   @protected
   void notifyListeners() {
     super.notifyListeners();
-    _streamController?.sink.add(value);
+    for (final tmp in _valueNotifiers.entries) {
+      tmp.value.value = tmp.key.call(value);
+    }
   }
 
   /// The current value stored in this notifier.

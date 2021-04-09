@@ -41,6 +41,18 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   @protected
   final List<T> initialMock = const [];
 
+  /// Returns itself after the load finishes.
+  @override
+  Future<ApiCollectionModel<T>> get loading =>
+      _loadingCompleter?.future ?? Future.value(this);
+  Completer<ApiCollectionModel<T>>? _loadingCompleter;
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<ApiCollectionModel<T>> get saving =>
+      _savingCompleter?.future ?? Future.value(this);
+  Completer<ApiCollectionModel<T>>? _savingCompleter;
+
   /// If this value is `true`,
   /// Notify changes when there are changes in the list itself using list-specific methods.
   @override
@@ -85,21 +97,25 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   List<Object> toCollection(List<T> list);
 
   /// Callback before the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onLoad() async {}
 
   /// Callback before the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onSave() async {}
 
   /// Callback after the load has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidLoad() async {}
 
   /// Callback after the save has been done.
+  @override
   @protected
   @mustCallSuper
   Future<void> onDidSave() async {}
@@ -166,13 +182,25 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiCollectionModel<T>> load() async {
-    await onLoad();
-    final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
-    onCatchResponse(res);
-    final data = fromCollection(filterOnLoad(fromResponse(res.body)));
-    addAll(data);
-    notifyListeners();
-    await onDidLoad();
+    if (_loadingCompleter != null) {
+      return loading;
+    }
+    _loadingCompleter = Completer<ApiCollectionModel<T>>();
+    try {
+      await onLoad();
+      final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
+      onCatchResponse(res);
+      final data = fromCollection(filterOnLoad(fromResponse(res.body)));
+      addAll(data);
+      notifyListeners();
+      await onDidLoad();
+      _loadingCompleter?.complete(this);
+      _loadingCompleter = null;
+    } catch (e) {
+      _loadingCompleter?.completeError(e);
+      _loadingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 
@@ -181,15 +209,27 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiCollectionModel<T>> save() async {
-    await onSave();
-    final res = await post(
-      Uri.parse(postEndpoint),
-      headers: postHeaders,
-      body: toRequest(filterOnSave(toCollection(this))),
-    );
-    onCatchResponse(res);
-    notifyListeners();
-    await onDidSave();
+    if (_savingCompleter != null) {
+      return saving;
+    }
+    _savingCompleter = Completer<ApiCollectionModel<T>>();
+    try {
+      await onSave();
+      final res = await post(
+        Uri.parse(postEndpoint),
+        headers: postHeaders,
+        body: toRequest(filterOnSave(toCollection(this))),
+      );
+      onCatchResponse(res);
+      notifyListeners();
+      await onDidSave();
+      _savingCompleter?.complete(this);
+      _savingCompleter = null;
+    } catch (e) {
+      _savingCompleter?.completeError(e);
+      _savingCompleter = null;
+      rethrow;
+    }
     return this;
   }
 
