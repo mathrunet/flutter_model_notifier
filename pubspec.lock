@@ -190,7 +190,7 @@ packages:
       name: katana
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.1+20"
+    version: "0.8.1+21"
   matcher:
     dependency: transitive
     description:

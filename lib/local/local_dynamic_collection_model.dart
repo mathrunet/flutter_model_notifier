@@ -21,7 +21,8 @@ final localCollectionProvider =
 /// You don't need to define a class to hold data strictly,
 /// so you can develop quickly, but it lacks stability.
 class LocalDynamicCollectionModel
-    extends LocalCollectionModel<LocalDynamicDocumentModel> {
+    extends LocalCollectionModel<LocalDynamicDocumentModel>
+    implements DynamicCollectionModel<LocalDynamicDocumentModel> {
   /// Specify the path and use [Map<String, dynamic>] to
   /// hold the data [LocalCollectionModel].
   ///
