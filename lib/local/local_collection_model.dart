@@ -121,7 +121,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
 
   /// Create a new document.
   ///
-  /// id] is the ID of the document. If it is blank, [uuid] is used.
+  /// [id] is the ID of the document. If it is blank, [uuid] is used.
   T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
 
   /// Register the data for the mock.
