@@ -46,12 +46,12 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   /// If this value is true,
   /// Notify changes when there are changes in the list itself using list-specific methods.
   @override
-  bool get notifyOnChangeList => true;
+  bool get notifyOnChangeList => false;
 
   /// If this value is true,
   /// the change will be notified when [value] itself is changed.
   @override
-  bool get notifyOnChangeValue => true;
+  bool get notifyOnChangeValue => false;
 
   /// Path of the local database.
   final String path;
