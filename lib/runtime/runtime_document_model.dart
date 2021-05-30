@@ -35,10 +35,10 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   }
 
   /// Key for UID values.
-  final String uidValueKey = "uid";
+  final String uidValueKey = Const.uid;
 
   /// Key for time values.
-  final String timeValueKey = "time";
+  final String timeValueKey = Const.time;
 
   /// Key for locale values.
   final String localeValueKey = "@locale";
