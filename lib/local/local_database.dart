@@ -49,6 +49,11 @@ class _LocalDatabase {
     }
   }
 
+  static void _unregisterParent(LocalCollectionModel collection) {
+    final path = collection.path;
+    _parentList[path]?.remove(collection);
+  }
+
   static void _addChild(LocalDocumentModel document) {
     final path = document.path.parentPath();
     if (!_parentList.containsKey(path)) {
@@ -63,9 +68,8 @@ class _LocalDatabase {
     if (!_parentList.containsKey(path)) {
       return;
     }
-    for (final element in _parentList[path] ?? const <LocalCollectionModel>{}) {
-      element._removeChildInternal(document);
-    }
+    _parentList[path]
+        ?.forEach((element) => element._removeChildInternal(document));
   }
 
   // static void _notifyChildChanges(LocalDocumentModel document) {
@@ -77,9 +81,4 @@ class _LocalDatabase {
   //     element._notifyChildChanges();
   //   }
   // }
-
-  static void _unregisterParent(LocalCollectionModel collection) {
-    final path = collection.path;
-    _parentList[path]?.remove(collection);
-  }
 }

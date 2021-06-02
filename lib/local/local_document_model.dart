@@ -49,7 +49,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   final String timeValueKey = Const.time;
 
   /// Key for locale values.
-  final String localeValueKey = "@locale";
+  final String localeValueKey = MetaConst.locale;
 
   /// Discards any resources used by the object.
   /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).

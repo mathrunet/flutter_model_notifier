@@ -8,7 +8,9 @@ part of model_notifier;
 /// In addition, since it can be used as [Map],
 /// it is possible to operate the content as it is.
 abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
-    implements DocumentMockModel<T, RuntimeDocumentModel<T>> {
+    implements
+        StoredModel<T, RuntimeDocumentModel<T>>,
+        DocumentMockModel<T, RuntimeDocumentModel<T>> {
   /// Base class for holding and manipulating data from a runtime database as a document of [T].
   ///
   /// The runtime database is a Json database.
@@ -41,7 +43,7 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   final String timeValueKey = Const.time;
 
   /// Key for locale values.
-  final String localeValueKey = "@locale";
+  final String localeValueKey = MetaConst.locale;
 
   /// The method to be executed when initialization is performed.
   @override
@@ -62,6 +64,51 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
 
   /// Path of the local database.
   final String path;
+
+  /// Returns itself after the load finishes.
+  @override
+  Future<RuntimeDocumentModel<T>> get loading => Future.value(this);
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<RuntimeDocumentModel<T>> get saving => Future.value(this);
+
+  /// Returns itself after the delete finishes.
+  Future<void> get deleting => Future.value();
+
+  /// Callback before the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onLoad() async {}
+
+  /// Callback before the save has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onSave() async {}
+
+  /// Callback before the delete has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onDelete() async {}
+
+  /// Callback after the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onDidLoad() async {}
+
+  /// Callback after the save has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onDidSave() async {}
+
+  /// Callback after the delete has been done.
+  @protected
+  @mustCallSuper
+  Future<void> onDidDelete() async {}
 
   /// You can filter the loaded content when it is loaded.
   ///
@@ -91,6 +138,64 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     value = mockData;
     notifyListeners();
     return this;
+  }
+
+  /// Retrieves data and updates the data in the model.
+  ///
+  /// You will be notified of model updates at the time they are retrieved.
+  ///
+  /// In addition,
+  /// the updated [Resuult] can be obtained at the stage where the loading is finished.
+  @override
+  Future<RuntimeDocumentModel<T>> load() async {
+    await onLoad();
+    value = fromMap(filterOnLoad(toMap(value)));
+    notifyListeners();
+    await onDidLoad();
+    return this;
+  }
+
+  /// Data stored in the model is stored in a database external to the app that is tied to the model.
+  ///
+  /// The updated [Resuult] can be obtained at the stage where the loading is finished.
+  @override
+  Future<RuntimeDocumentModel<T>> save() async {
+    await onSave();
+    value = fromMap(filterOnSave(toMap(value)));
+    _RuntimeDatabase._addChild(this);
+    notifyListeners();
+    await onDidSave();
+    return this;
+  }
+
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<RuntimeDocumentModel<T>> reload() => load();
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<RuntimeDocumentModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
+    return this;
+  }
+
+  /// Deletes the document.
+  ///
+  /// Deleted documents are immediately reflected and removed from related collections, etc.
+  Future<void> delete() async {
+    await onDelete();
+    _RuntimeDatabase._removeChild(this);
+    notifyListeners();
+    await onDidDelete();
   }
 
   /// The equality operator.

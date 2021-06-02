@@ -22,7 +22,7 @@ final runtimeDocumentProvider =
 /// so you can develop quickly, but it lacks stability.
 class RuntimeDynamicDocumentModel
     extends RuntimeDocumentModel<Map<String, dynamic>>
-    with MapModelMixin<dynamic>
+    with MapModelMixin<dynamic>, RuntimeDocumentMetaMixin<Map<String, dynamic>>
     implements DynamicDocumentModel {
   /// Specify the path and use [Map<String, dynamic>] to
   /// hold the data [LocalDocumentModel].

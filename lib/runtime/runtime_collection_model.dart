@@ -20,7 +20,9 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   RuntimeCollectionModel(this.path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
-        super(value ?? []);
+        super(value ?? []) {
+    _RuntimeDatabase._registerParent(this);
+  }
 
   /// The method to be executed when initialization is performed.
   @override
@@ -36,6 +38,18 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
         addAll(initialMock);
       }
     }
+  }
+
+  /// Discards any resources used by the object.
+  /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).
+  ///
+  /// This method should only be called by the object's owner.
+  @override
+  @protected
+  @mustCallSuper
+  void dispose() {
+    super.dispose();
+    _RuntimeDatabase._unregisterParent(this);
   }
 
   /// Initial value of mock.
@@ -81,5 +95,21 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
       notifyListeners();
     }
     return this;
+  }
+
+  void _addChildInternal(T document) {
+    if (any((e) => e == document || e.path == document.path)) {
+      return;
+    }
+    add(document);
+    notifyListeners();
+  }
+
+  void _removeChildInternal(T document) {
+    if (!any((e) => e == document || e.path == document.path)) {
+      return;
+    }
+    remove(document);
+    notifyListeners();
   }
 }
