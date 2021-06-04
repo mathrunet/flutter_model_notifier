@@ -138,14 +138,14 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// Edit the value of [loaded] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
+  DynamicMap filterOnLoad(DynamicMap loaded) => loaded;
 
   /// You can filter the saving content when it is saving.
   ///
   /// Edit the value of [save] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
+  DynamicMap filterOnSave(DynamicMap save) => save;
 
   /// Register the data for the mock.
   ///
@@ -179,8 +179,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await _LocalDatabase.initialize();
       await onLoad();
       value = fromMap(filterOnLoad(
-          _LocalDatabase._root._readFromPath<Map<String, dynamic>>(path) ??
-              const {}));
+          _LocalDatabase._root._readFromPath<DynamicMap>(path) ?? const {}));
       notifyListeners();
       await onDidLoad();
       _loadingCompleter?.complete(this);

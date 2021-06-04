@@ -7,7 +7,7 @@ mixin LocalDocumentMetaMixin<T> on LocalDocumentModel<T> {
   @override
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnSave(Map<String, dynamic> save) {
+  DynamicMap filterOnSave(DynamicMap save) {
     save[timeValueKey] = DateTime.now().millisecondsSinceEpoch;
     save[uidValueKey] = path.split("/").last;
     final language = Localize.language;

@@ -12,10 +12,10 @@ abstract class DocumentModel<T> extends ValueModel<T> {
   /// Creates a specific object from a given [map].
   ///
   /// This is used to convert the loaded data into an object for internal management.
-  T fromMap(Map<String, dynamic> map);
+  T fromMap(DynamicMap map);
 
-  /// Creates a [Map<String, dynamic>] from its own [value].
+  /// Creates a [DynamicMap] from its own [value].
   ///
   /// It is used for storing data.
-  Map<String, dynamic> toMap(T value);
+  DynamicMap toMap(T value);
 }

@@ -15,7 +15,7 @@ final localCollectionProvider =
   (_, path) => LocalDynamicCollectionModel(path),
 );
 
-/// Specify the path and use [Map<String, dynamic>] to
+/// Specify the path and use [DynamicMap] to
 /// hold the data [LocalCollectionModel].
 ///
 /// You don't need to define a class to hold data strictly,
@@ -23,7 +23,7 @@ final localCollectionProvider =
 class LocalDynamicCollectionModel
     extends LocalCollectionModel<LocalDynamicDocumentModel>
     implements DynamicCollectionModel<LocalDynamicDocumentModel> {
-  /// Specify the path and use [Map<String, dynamic>] to
+  /// Specify the path and use [DynamicMap] to
   /// hold the data [LocalCollectionModel].
   ///
   /// You don't need to define a class to hold data strictly,

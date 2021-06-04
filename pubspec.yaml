@@ -1,11 +1,11 @@
 name: model_notifier
 description: Package that makes it easy to define ValueNotifier as a model and improves the affinity with riverpod and freezed.
-version: 0.8.2+3
+version: 0.8.2+6
 homepage: https://mathru.net
 repository: https://github.com/mathrunet/flutter_model_notifier
 
 environment:
-  sdk: ">=2.12.0-0 <3.0.0"
+  sdk: ">=2.13.0-0 <3.0.0"
   flutter: ">=1.17.0"
 
 dependencies:

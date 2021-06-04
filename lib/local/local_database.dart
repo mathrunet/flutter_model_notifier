@@ -10,7 +10,7 @@ class _LocalDatabase {
     await Prefs.initialize();
   }
 
-  static Map<String, dynamic> get _root {
+  static DynamicMap get _root {
     if (!isInitialized) {
       debugPrint(
           "It has not been initialized. Please execute [initialize()] to initialize it.");
@@ -27,7 +27,7 @@ class _LocalDatabase {
     return __root ?? const {};
   }
 
-  static Map<String, dynamic>? __root;
+  static DynamicMap? __root;
   static final Map<String, Set<LocalCollectionModel>> _parentList = {};
 
   static void _save() {

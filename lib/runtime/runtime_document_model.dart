@@ -115,14 +115,14 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// Edit the value of [loaded] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
+  DynamicMap filterOnLoad(DynamicMap loaded) => loaded;
 
   /// You can filter the saving content when it is saving.
   ///
   /// Edit the value of [save] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
+  DynamicMap filterOnSave(DynamicMap save) => save;
 
   /// Register the data for the mock.
   ///

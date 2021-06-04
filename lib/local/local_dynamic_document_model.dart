@@ -15,20 +15,20 @@ final localDocumentProvider =
   (_, path) => LocalDynamicDocumentModel(path),
 );
 
-/// Specify the path and use [Map<String, dynamic>] to
+/// Specify the path and use [DynamicMap] to
 /// hold the data [LocalDocumentModel].
 ///
 /// You don't need to define a class to hold data strictly,
 /// so you can develop quickly, but it lacks stability.
-class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
-    with MapModelMixin<dynamic>, LocalDocumentMetaMixin<Map<String, dynamic>>
+class LocalDynamicDocumentModel extends LocalDocumentModel<DynamicMap>
+    with MapModelMixin<dynamic>, LocalDocumentMetaMixin<DynamicMap>
     implements DynamicDocumentModel {
-  /// Specify the path and use [Map<String, dynamic>] to
+  /// Specify the path and use [DynamicMap] to
   /// hold the data [LocalDocumentModel].
   ///
   /// You don't need to define a class to hold data strictly,
   /// so you can develop quickly, but it lacks stability.
-  LocalDynamicDocumentModel(String path, [Map<String, dynamic>? map])
+  LocalDynamicDocumentModel(String path, [DynamicMap? map])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 0),
             "The path hierarchy must be an even number."),
         super(path, map ?? {});
@@ -49,13 +49,11 @@ class LocalDynamicDocumentModel extends LocalDocumentModel<Map<String, dynamic>>
   ///
   /// This is used to convert the loaded data into an object for internal management.
   @override
-  Map<String, dynamic> fromMap(Map<String, dynamic> map) =>
-      map.cast<String, dynamic>();
+  DynamicMap fromMap(DynamicMap map) => map.cast<String, dynamic>();
 
   /// Creates a specific object from a given [map].
   ///
   /// This is used to convert the loaded data into an object for internal management.
   @override
-  Map<String, dynamic> toMap(Map<String, dynamic> value) =>
-      value.cast<String, Object>();
+  DynamicMap toMap(DynamicMap value) => value.cast<String, Object>();
 }

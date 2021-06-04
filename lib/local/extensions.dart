@@ -1,6 +1,6 @@
 part of model_notifier;
 
-extension _LocalStringMapExtensions on Map<String, dynamic> {
+extension _LocalStringMapExtensions on DynamicMap {
   T? _readFromPath<T>(String path) {
     final paths = path.split("/");
     if (paths.isEmpty) {
@@ -17,9 +17,8 @@ extension _LocalStringMapExtensions on Map<String, dynamic> {
     if (p.isEmpty || !containsKey(p)) {
       return null;
     }
-    if (this[p] is Map<String, dynamic>)
-      return (this[p] as Map<String, dynamic>)
-          ._readFromPathInternal(paths, index + 1);
+    if (this[p] is DynamicMap)
+      return (this[p] as DynamicMap)._readFromPathInternal(paths, index + 1);
     return this[p];
   }
 
@@ -41,13 +40,10 @@ extension _LocalStringMapExtensions on Map<String, dynamic> {
     if (p.isEmpty) {
       return;
     }
-    if (!containsKey(p) ||
-        this[p] == null ||
-        this[p] is! Map<String, dynamic>) {
+    if (!containsKey(p) || this[p] == null || this[p] is! DynamicMap) {
       this[p] = <String, dynamic>{};
     }
-    (this[p] as Map<String, dynamic>)
-        ._writeToPathInternal(paths, index + 1, value);
+    (this[p] as DynamicMap)._writeToPathInternal(paths, index + 1, value);
   }
 
   void _deleteFromPath(String path) {
@@ -67,11 +63,9 @@ extension _LocalStringMapExtensions on Map<String, dynamic> {
     if (p.isEmpty) {
       return;
     }
-    if (!containsKey(p) ||
-        this[p] == null ||
-        this[p] is! Map<String, dynamic>) {
+    if (!containsKey(p) || this[p] == null || this[p] is! DynamicMap) {
       return;
     }
-    (this[p] as Map<String, dynamic>)._deleteFromPathInternal(paths, index + 1);
+    (this[p] as DynamicMap)._deleteFromPathInternal(paths, index + 1);
   }
 }

@@ -28,9 +28,9 @@ class CollectionQuery {
   // final dynamic isGreaterThan;
   final dynamic isGreaterThanOrEqualTo;
   final dynamic arrayContains;
-  final List<dynamic>? arrayContainsAny;
-  final List<dynamic>? whereIn;
-  final List<dynamic>? whereNotIn;
+  final DynamicList? arrayContainsAny;
+  final DynamicList? whereIn;
+  final DynamicList? whereNotIn;
   // final bool? isNull;
   final CollectionQueryOrder order;
   final int? limit;

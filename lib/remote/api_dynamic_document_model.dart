@@ -5,9 +5,9 @@ final apiDocumentProvider =
   (_, endpoint) => ApiDynamicDocumentModel(endpoint),
 );
 
-class ApiDynamicDocumentModel extends ApiDocumentModel<Map<String, dynamic>>
+class ApiDynamicDocumentModel extends ApiDocumentModel<DynamicMap>
     with MapModelMixin<dynamic> {
-  ApiDynamicDocumentModel(String endpoint, [Map<String, dynamic>? map])
+  ApiDynamicDocumentModel(String endpoint, [DynamicMap? map])
       : super(endpoint, map ?? {});
 
   @override
@@ -15,10 +15,8 @@ class ApiDynamicDocumentModel extends ApiDocumentModel<Map<String, dynamic>>
   bool get notifyOnChangeMap => false;
 
   @override
-  Map<String, dynamic> fromMap(Map<String, dynamic> map) =>
-      map.cast<String, dynamic>();
+  DynamicMap fromMap(DynamicMap map) => map.cast<String, dynamic>();
 
   @override
-  Map<String, dynamic> toMap(Map<String, dynamic> value) =>
-      value.cast<String, Object>();
+  DynamicMap toMap(DynamicMap value) => value.cast<String, Object>();
 }

@@ -107,25 +107,25 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
 
   /// Callback for converting to a map of objects for a response.
   @protected
-  Map<String, dynamic> fromResponse(String json) => jsonDecodeAsMap(json);
+  DynamicMap fromResponse(String json) => jsonDecodeAsMap(json);
 
   /// Callback for converting internal map data to request data.
   @protected
-  dynamic toRequest(Map<String, dynamic> map) => jsonEncode(map);
+  dynamic toRequest(DynamicMap map) => jsonEncode(map);
 
   /// You can filter the loaded content when it is loaded.
   ///
   /// Edit the value of [loaded] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnLoad(Map<String, dynamic> loaded) => loaded;
+  DynamicMap filterOnLoad(DynamicMap loaded) => loaded;
 
   /// You can filter the saving content when it is saving.
   ///
   /// Edit the value of [save] and return.
   @protected
   @mustCallSuper
-  Map<String, dynamic> filterOnSave(Map<String, dynamic> save) => save;
+  DynamicMap filterOnSave(DynamicMap save) => save;
 
   /// Register the data for the mock.
   ///

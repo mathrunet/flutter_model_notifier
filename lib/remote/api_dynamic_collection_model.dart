@@ -5,19 +5,16 @@ final apiCollectionProvider =
   (_, endpoint) => ApiDynamicCollectionModel(endpoint),
 );
 
-class ApiDynamicCollectionModel
-    extends ApiCollectionModel<Map<String, dynamic>> {
+class ApiDynamicCollectionModel extends ApiCollectionModel<DynamicMap> {
   ApiDynamicCollectionModel(String endpoint, [List<MapModel<dynamic>>? value])
       : super(endpoint, value ?? []);
 
   @override
-  List<Map<String, dynamic>> fromCollection(List<Object> list) =>
-      list.cast<Map<String, dynamic>>();
+  List<DynamicMap> fromCollection(List<Object> list) => list.cast<DynamicMap>();
 
   @override
-  List<Object> toCollection(List<Map<String, dynamic>> list) =>
-      list.cast<Object>();
+  List<Object> toCollection(List<DynamicMap> list) => list.cast<Object>();
 
   @override
-  Map<String, dynamic> createDocument() => {};
+  DynamicMap createDocument() => {};
 }

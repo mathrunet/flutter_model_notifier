@@ -158,8 +158,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       await _LocalDatabase.initialize();
       await onLoad();
       bool notify = false;
-      final data =
-          _LocalDatabase._root._readFromPath<Map<String, dynamic>?>(path);
+      final data = _LocalDatabase._root._readFromPath<DynamicMap?>(path);
       if (isNotEmpty) {
         clear();
         notify = true;
@@ -168,7 +167,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         notify = true;
         final addData = <T>[];
         for (final tmp in data!.entries) {
-          if (tmp.key.isEmpty || tmp.value is! Map<String, dynamic>) {
+          if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
             continue;
           }
           final value = createDocument("$path/${tmp.key}");
