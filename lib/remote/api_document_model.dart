@@ -127,6 +127,31 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   @mustCallSuper
   DynamicMap filterOnSave(DynamicMap save) => save;
 
+  /// The actual loading process is done from the API when it is loaded.
+  ///
+  /// By overriding, it is possible to use plugins, etc.
+  /// in addition to simply retrieving from the URL.
+  @protected
+  Future<void> loadRequest() async {
+    final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
+    onCatchResponse(res);
+    value = fromMap(filterOnLoad(fromResponse(res.body)));
+  }
+
+  /// The actual loading process is done from the API when it is saved.
+  ///
+  /// By overriding, it is possible to use plugins, etc.
+  /// in addition to simply saving to the URL.
+  @protected
+  Future<void> saveRequest() async {
+    final res = await post(
+      Uri.parse(postEndpoint),
+      headers: postHeaders,
+      body: toRequest(filterOnSave(toMap(value))),
+    );
+    onCatchResponse(res);
+  }
+
   /// Register the data for the mock.
   ///
   /// Once the data for the mock is registered, it will not be changed.
@@ -157,9 +182,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     _loadingCompleter = Completer<ApiDocumentModel<T>>();
     try {
       await onLoad();
-      final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
-      onCatchResponse(res);
-      value = fromMap(filterOnLoad(fromResponse(res.body)));
+      await loadRequest();
       notifyListeners();
       await onDidLoad();
       _loadingCompleter?.complete(this);
@@ -183,12 +206,7 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
     _savingCompleter = Completer<ApiDocumentModel<T>>();
     try {
       await onSave();
-      final res = await post(
-        Uri.parse(postEndpoint),
-        headers: postHeaders,
-        body: toRequest(filterOnSave(toMap(value))),
-      );
-      onCatchResponse(res);
+      await saveRequest();
       notifyListeners();
       await onDidSave();
       _savingCompleter?.complete(this);

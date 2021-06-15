@@ -125,7 +125,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// Throwing Exceptions on responses, etc.
   @protected
   @mustCallSuper
-  void onCatchResponse(Response response) {}
+  void onCatchResponse(dynamic response) {}
 
   /// Callback for converting to a list of objects for a response.
   @protected
@@ -155,6 +155,32 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
 
   /// Create a new document.
   T create() => createDocument();
+
+  /// The actual loading process is done from the API when it is loaded.
+  ///
+  /// By overriding, it is possible to use plugins, etc.
+  /// in addition to simply retrieving from the URL.
+  @protected
+  Future<void> loadRequest() async {
+    final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
+    onCatchResponse(res);
+    final data = fromCollection(filterOnLoad(fromResponse(res.body)));
+    addAll(data);
+  }
+
+  /// The actual loading process is done from the API when it is saved.
+  ///
+  /// By overriding, it is possible to use plugins, etc.
+  /// in addition to simply saving to the URL.
+  @protected
+  Future<void> saveRequest() async {
+    final res = await post(
+      Uri.parse(postEndpoint),
+      headers: postHeaders,
+      body: toRequest(filterOnSave(toCollection(this))),
+    );
+    onCatchResponse(res);
+  }
 
   /// Register the data for the mock.
   ///
@@ -188,10 +214,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     _loadingCompleter = Completer<ApiCollectionModel<T>>();
     try {
       await onLoad();
-      final res = await get(Uri.parse(getEndpoint), headers: getHeaders);
-      onCatchResponse(res);
-      final data = fromCollection(filterOnLoad(fromResponse(res.body)));
-      addAll(data);
+      await loadRequest();
       notifyListeners();
       await onDidLoad();
       _loadingCompleter?.complete(this);
@@ -215,12 +238,7 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
     _savingCompleter = Completer<ApiCollectionModel<T>>();
     try {
       await onSave();
-      final res = await post(
-        Uri.parse(postEndpoint),
-        headers: postHeaders,
-        body: toRequest(filterOnSave(toCollection(this))),
-      );
-      onCatchResponse(res);
+      await saveRequest();
       notifyListeners();
       await onDidSave();
       _savingCompleter?.complete(this);
