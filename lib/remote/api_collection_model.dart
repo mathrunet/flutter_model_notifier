@@ -238,7 +238,11 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// It is basically the same as the [load] method,
   /// but combining it with [loadOnce] makes it easier to manage the data.
   @override
-  Future<ApiCollectionModel<T>> reload() => load();
+  Future<ApiCollectionModel<T>> reload() async {
+    clear();
+    await load();
+    return this;
+  }
 
   /// If the data is empty, [load] is performed only once.
   ///

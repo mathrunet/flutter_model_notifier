@@ -203,7 +203,11 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// It is basically the same as the [load] method,
   /// but combining it with [loadOnce] makes it easier to manage the data.
   @override
-  Future<LocalCollectionModel<T>> reload() => load();
+  Future<LocalCollectionModel<T>> reload() async {
+    clear();
+    await load();
+    return this;
+  }
 
   /// If the data is empty, [load] is performed only once.
   ///

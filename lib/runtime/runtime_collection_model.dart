@@ -112,4 +112,11 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     remove(document);
     notifyListeners();
   }
+
+  T? _fetchChildInternal(String uid) {
+    if (uid.isEmpty) {
+      return null;
+    }
+    return firstWhereOrNull((item) => item.path.last() == uid);
+  }
 }

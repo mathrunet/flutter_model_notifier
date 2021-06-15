@@ -54,6 +54,11 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     if (Config.isEnabledMockup && initialMock != null) {
       // ignore: null_check_on_nullable_type_parameter
       value = initialMock!;
+    } else {
+      final tmp = _RuntimeDatabase._fetchChild(path);
+      if (tmp != null && tmp.value is T) {
+        value = tmp.value;
+      }
     }
   }
 

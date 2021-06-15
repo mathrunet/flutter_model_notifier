@@ -19,6 +19,21 @@ class _RuntimeDatabase {
     _parentList[path]?.remove(collection);
   }
 
+  static RuntimeDocumentModel? _fetchChild(String path) {
+    final parentPath = path.parentPath();
+    final uid = path.last();
+    if (!_parentList.containsKey(parentPath)) {
+      return null;
+    }
+    return _parentList[parentPath]?.fold<RuntimeDocumentModel?>(null,
+        (val, child) {
+      if (val != null) {
+        return val;
+      }
+      return child._fetchChildInternal(uid);
+    });
+  }
+
   static void _addChild(RuntimeDocumentModel document) {
     final path = document.path.parentPath();
     if (!_parentList.containsKey(path)) {
