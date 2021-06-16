@@ -53,7 +53,7 @@ class _LocalDatabase {
     final path = _path(collection.path);
     _parentList[path]?.remove(collection);
   }
-  
+
   static String _path(String path) {
     if (path.contains("?")) {
       return path.split("?").first;
