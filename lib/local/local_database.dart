@@ -41,7 +41,7 @@ class _LocalDatabase {
   }
 
   static void _registerParent(LocalCollectionModel collection) {
-    final path = collection.path;
+    final path = _path(collection.path);
     if (_parentList.containsKey(path)) {
       _parentList[path]?.add(collection);
     } else {
@@ -50,8 +50,16 @@ class _LocalDatabase {
   }
 
   static void _unregisterParent(LocalCollectionModel collection) {
-    final path = collection.path;
+    final path = _path(collection.path);
     _parentList[path]?.remove(collection);
+  }
+  
+  static String _path(String path) {
+    if (path.contains("?")) {
+      return path.split("?").first;
+    } else {
+      return path;
+    }
   }
 
   static void _addChild(LocalDocumentModel document) {

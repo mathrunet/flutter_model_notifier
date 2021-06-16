@@ -109,7 +109,7 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     if (!any((e) => e == document || e.path == document.path)) {
       return;
     }
-    remove(document);
+    removeWhere((e) => e == document || e.path == document.path);
     notifyListeners();
   }
 

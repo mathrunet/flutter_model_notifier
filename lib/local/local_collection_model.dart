@@ -233,7 +233,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     if (!any((e) => e == document || e.path == document.path)) {
       return;
     }
-    remove(document);
+    removeWhere((e) => e == document || e.path == document.path);
     notifyListeners();
   }
 

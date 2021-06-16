@@ -6,7 +6,7 @@ class _RuntimeDatabase {
   static final Map<String, Set<RuntimeCollectionModel>> _parentList = {};
 
   static void _registerParent(RuntimeCollectionModel collection) {
-    final path = collection.path;
+    final path = _path(collection.path);
     if (_parentList.containsKey(path)) {
       _parentList[path]?.add(collection);
     } else {
@@ -15,8 +15,16 @@ class _RuntimeDatabase {
   }
 
   static void _unregisterParent(RuntimeCollectionModel collection) {
-    final path = collection.path;
+    final path = _path(collection.path);
     _parentList[path]?.remove(collection);
+  }
+
+  static String _path(String path) {
+    if (path.contains("?")) {
+      return path.split("?").first;
+    } else {
+      return path;
+    }
   }
 
   static RuntimeDocumentModel? _fetchChild(String path) {
