@@ -182,10 +182,9 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       await onDidLoad();
       _loadingCompleter?.complete(this);
       _loadingCompleter = null;
-    } catch (e) {
+    } finally {
       _loadingCompleter?.completeError(e);
       _loadingCompleter = null;
-      rethrow;
     }
     return this;
   }

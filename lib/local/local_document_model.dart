@@ -184,10 +184,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidLoad();
       _loadingCompleter?.complete(this);
       _loadingCompleter = null;
-    } catch (e) {
+    } finally {
       _loadingCompleter?.completeError(e);
       _loadingCompleter = null;
-      rethrow;
     }
     return this;
   }
@@ -211,10 +210,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidSave();
       _savingCompleter?.complete(this);
       _savingCompleter = null;
-    } catch (e) {
+    } finally {
       _savingCompleter?.completeError(e);
       _savingCompleter = null;
-      rethrow;
     }
     return this;
   }
@@ -257,10 +255,9 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidDelete();
       _deletingCompleter?.complete();
       _deletingCompleter = null;
-    } catch (e) {
+    } finally {
       _deletingCompleter?.completeError(e);
       _deletingCompleter = null;
-      rethrow;
     }
   }
 
