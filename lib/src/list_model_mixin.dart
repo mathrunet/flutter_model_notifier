@@ -50,7 +50,7 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
     if (super.value == other) {
       return true;
     }
-    if (other is ListNotifier) {
+    if (other is ListenableList) {
       if (super.value.length != other.length) {
         return false;
       }

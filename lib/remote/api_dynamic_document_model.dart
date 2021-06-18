@@ -6,7 +6,7 @@ final apiDocumentProvider =
 );
 
 class ApiDynamicDocumentModel extends ApiDocumentModel<DynamicMap>
-    with MapModelMixin<dynamic> {
+    with MapModelMixin<String, dynamic> {
   ApiDynamicDocumentModel(String endpoint, [DynamicMap? map])
       : super(endpoint, map ?? {});
 

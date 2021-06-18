@@ -5,7 +5,7 @@ part of model_notifier;
 /// It can be used in the same way as [ValueNotifier].
 ///
 /// You can also use [toString()] to convert it to a [Stream].
-abstract class ValueModel<T> extends Model<T> {
+abstract class ValueModel<T> extends Model<T> implements ValueListenable<T> {
   /// [Model] which only stores one value.
   ///
   /// It can be used in the same way as [ValueNotifier].
@@ -73,6 +73,7 @@ abstract class ValueModel<T> extends Model<T> {
   /// When the value is replaced with something that is not equal to the old
   /// value as evaluated by the equality operator ==, this class notifies its
   /// listeners.
+  @override
   T get value => _value;
   T _value;
 
@@ -150,5 +151,5 @@ abstract class ValueModel<T> extends Model<T> {
   /// Other classes have no meaningful textual representation that a program will care about.
   /// Such classes will typically override toString to provide useful information when inspecting the object, mainly for debugging or logging.
   @override
-  String toString() => "${describeIdentity(this)}($value)";
+  String toString() => "${this}($value)";
 }

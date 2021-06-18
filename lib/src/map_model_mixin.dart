@@ -2,8 +2,8 @@ part of model_notifier;
 
 /// A mix-in that allows you to use a model as a map.
 ///
-/// It can be applied to any [ValueModel] that has a [Map<String, T>].
-mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
+/// It can be applied to any [ValueModel] that has a [Map<K, V>].
+mixin MapModelMixin<K, V> on ValueModel<Map<K, V>> implements Map<K, V> {
   /// Discards any resources used by the object. After this is called, the
   /// object is not in a usable state and should be discarded (calls to
   /// [addListener] and [removeListener] will throw after the object is
@@ -50,7 +50,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
     if (super.value == other) {
       return true;
     }
-    if (other is MapNotifier) {
+    if (other is ListenableMap) {
       if (super.value.length != other.length) {
         return false;
       }
@@ -96,14 +96,14 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// and the key being there with a null value.
   /// Methods like [containsKey] or [putIfAbsent] can be used if the distinction is important.
   @override
-  T? operator [](Object? key) => super.value[key];
+  V? operator [](Object? key) => super.value[key];
 
   /// Associates the [key] with the given [value].
   ///
   /// If the key was already in the map, its associated value is changed.
   /// Otherwise the key/value pair is added to the map.
   @override
-  void operator []=(String key, T value) {
+  void operator []=(K key, V value) {
     if (super.value.containsKey(key) && super.value[key] == value) {
       return;
     }
@@ -121,7 +121,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// and associated value in other. It iterates over [other], which must
   /// therefore not change during the iteration.
   @override
-  void addAll(Map<String, T> other) {
+  void addAll(Map<K, V> other) {
     super.value.addAll(other);
     if (notifyOnChangeMap) {
       notifyListeners();
@@ -136,7 +136,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// The operation is equivalent to doing `this[entry.key] = entry.value`
   /// for each [MapEntry] of the iterable.
   @override
-  void addEntries(Iterable<MapEntry<String, T>> newEntries) {
+  void addEntries(Iterable<MapEntry<K, V>> newEntries) {
     super.value.addEntries(newEntries);
     if (notifyOnChangeMap) {
       notifyListeners();
@@ -185,13 +185,13 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
 
   /// The map entries of [this].
   @override
-  Iterable<MapEntry<String, T>> get entries => super.value.entries;
+  Iterable<MapEntry<K, V>> get entries => super.value.entries;
 
   /// Applies [action] to each key/value pair of the map.
   ///
   /// Calling `action` must not add or remove keys from the map.
   @override
-  void forEach(void Function(String key, T value) action) {
+  void forEach(void Function(K key, V value) action) {
     super.value.forEach(action);
   }
 
@@ -213,7 +213,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   ///
   /// Modifying the map while iterating the keys may break the iteration.
   @override
-  Iterable<String> get keys => super.value.keys;
+  Iterable<K> get keys => super.value.keys;
 
   /// The number of key/value pairs in the map.
   @override
@@ -222,8 +222,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// Returns a new map where all entries of this map are transformed by
   /// the given [convert] function.
   @override
-  Map<K2, V2> map<K2, V2>(
-      MapEntry<K2, V2> Function(String key, T value) convert) {
+  Map<K2, V2> map<K2, V2>(MapEntry<K2, V2> Function(K key, V value) convert) {
     return super.value.map<K2, V2>(convert);
   }
 
@@ -243,7 +242,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// ```
   /// Calling [ifAbsent] must not add or remove keys from the map.
   @override
-  T putIfAbsent(String key, T Function() ifAbsent) {
+  V putIfAbsent(K key, V Function() ifAbsent) {
     final value = super.value.putIfAbsent(key, ifAbsent);
     if (notifyOnChangeMap) {
       notifyListeners();
@@ -259,7 +258,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// Note that some maps allow `null` as a value,
   /// so a returned `null` value doesn't always mean that the key was absent.
   @override
-  T? remove(Object? key) {
+  V? remove(Object? key) {
     final value = super.value.remove(key);
     if (value != null) {
       if (notifyOnChangeMap) {
@@ -271,7 +270,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
 
   /// Removes all entries of this map that satisfy the given [test].
   @override
-  void removeWhere(bool Function(String key, T value) test) {
+  void removeWhere(bool Function(K key, V value) test) {
     super.value.removeWhere((key, value) {
       if (!test(key, value)) {
         return false;
@@ -295,7 +294,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   ///
   /// If the key is not present, [ifAbsent] must be provided.
   @override
-  T update(String key, T Function(T value) update, {T Function()? ifAbsent}) {
+  V update(K key, V Function(V value) update, {V Function()? ifAbsent}) {
     final value = super.value.update(key, update, ifAbsent: ifAbsent);
     if (notifyOnChangeMap) {
       notifyListeners();
@@ -308,7 +307,7 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   /// Iterates over all entries in the map and updates them with the result
   /// of invoking [update].
   @override
-  void updateAll(T Function(String key, T value) update) {
+  void updateAll(V Function(K key, V value) update) {
     super.value.updateAll(update);
     if (notifyOnChangeMap) {
       notifyListeners();
@@ -327,5 +326,5 @@ mixin MapModelMixin<T> on ValueModel<Map<String, T>> implements Map<String, T> {
   ///
   /// Modifying the map while iterating the values may break the iteration.
   @override
-  Iterable<T> get values => super.value.values;
+  Iterable<V> get values => super.value.values;
 }

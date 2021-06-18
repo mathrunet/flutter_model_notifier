@@ -9,7 +9,9 @@ part of model_notifier;
 /// it is possible to operate the content as it is.
 abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     extends ListModel<T>
-    implements CollectionMockModel<T, RuntimeCollectionModel<T>> {
+    implements
+        StoredModel<List<T>, RuntimeCollectionModel<T>>,
+        CollectionMockModel<T, RuntimeCollectionModel<T>> {
   /// Base class for holding and manipulating data from a runtime database as a collection of [RuntimeDocumentModel].
   ///
   /// The runtime database is a Json database.
@@ -17,11 +19,20 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   ///
   /// In addition, since it can be used as [List],
   /// it is possible to operate the content as it is.
-  RuntimeCollectionModel(this.path, [List<T>? value])
+  RuntimeCollectionModel(String path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
+        path = path.trimQuery(),
+        parameters = _getParameters(path),
         super(value ?? []) {
     _RuntimeDatabase._registerParent(this);
+  }
+
+  static Map<String, String> _getParameters(String path) {
+    if (path.contains("?")) {
+      return Uri.parse(path).queryParameters;
+    }
+    return const {};
   }
 
   /// The method to be executed when initialization is performed.
@@ -67,8 +78,57 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   @override
   bool get notifyOnChangeValue => false;
 
-  /// Path of the local database.
+  /// If this value is `true`,
+  /// you will be notified when the element has been modified.
+  bool get notifyOnModified => _notifyOnModified;
+  // ignore: prefer_final_fields
+  bool _notifyOnModified = false;
+
+  /// Change the value of [notifyOnModified] to [notify].
+  void setNotifyOnModified(bool notify) {
+    _notifyOnModified = notify;
+  }
+
+  /// Path of the runtime database.
   final String path;
+
+  /// Parameters of the runtime database.
+  final Map<String, String> parameters;
+
+  /// Returns itself after the load finishes.
+  @override
+  Future<RuntimeCollectionModel<T>> get loading => Future.value(this);
+
+  /// Returns itself after the save finishes.
+  @override
+  Future<RuntimeCollectionModel<T>> get saving => throw UnimplementedError(
+      "Save process should be done for each document.");
+
+  /// Callback before the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onLoad() async {}
+
+  /// Callback after the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onDidLoad() async {}
+
+  /// Callback after the load has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onSave() async => throw UnimplementedError(
+      "Save process should be done for each document.");
+
+  /// Callback after the save has been done.
+  @override
+  @protected
+  @mustCallSuper
+  Future<void> onDidSave() async => throw UnimplementedError(
+      "Save process should be done for each document.");
 
   /// Add a process to create a document object.
   @protected
@@ -77,7 +137,8 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   /// Create a new document.
   ///
   /// [id] is the ID of the document. If it is blank, [uuid] is used.
-  T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
+  T create([String? id]) =>
+      createDocument("${path.trimQuery()}/${id.isEmpty ? uuid : id}");
 
   /// Register the data for the mock.
   ///
@@ -97,8 +158,84 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     return this;
   }
 
+  /// Retrieves data and updates the data in the model.
+  ///
+  /// You will be notified of model updates at the time they are retrieved.
+  ///
+  /// In addition,
+  /// the updated [Resuult] can be obtained at the stage where the loading is finished.
+  @override
+  Future<RuntimeCollectionModel<T>> load() async {
+    await onLoad();
+    bool notify = false;
+    final data = CollectionQuery._filter(
+      parameters,
+      _RuntimeDatabase._root._readFromPath<DynamicMap?>(path),
+    );
+    if (isNotEmpty) {
+      clear();
+      notify = true;
+    }
+    if (data.isNotEmpty) {
+      notify = true;
+      final addData = <T>[];
+      for (final tmp in data!.entries) {
+        if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
+          continue;
+        }
+        final value = createDocument("${path.trimQuery()}/${tmp.key}");
+        value.value = value.fromMap(value.filterOnLoad(tmp.value));
+        addData.add(value);
+      }
+      addAll(addData);
+    }
+    if (notify) {
+      notifyListeners();
+    }
+    await onDidLoad();
+    return this;
+  }
+
+  /// Data stored in the model is stored in a database external to the app that is tied to the model.
+  ///
+  /// The updated [Resuult] can be obtained at the stage where the loading is finished.
+  @override
+  Future<RuntimeCollectionModel<T>> save() async {
+    throw UnimplementedError("Save process should be done for each document.");
+  }
+
+  /// Reload data and updates the data in the model.
+  ///
+  /// It is basically the same as the [load] method,
+  /// but combining it with [loadOnce] makes it easier to manage the data.
+  @override
+  Future<RuntimeCollectionModel<T>> reload() async {
+    clear();
+    await load();
+    return this;
+  }
+
+  /// If the data is empty, [load] is performed only once.
+  ///
+  /// In other cases, the value is returned as is.
+  ///
+  /// Use [isEmpty] to determine whether the file is empty or not.
+  @override
+  Future<RuntimeCollectionModel<T>> loadOnce() async {
+    if (isEmpty) {
+      return load();
+    }
+    return this;
+  }
+
   void _addChildInternal(T document) {
     if (any((e) => e == document || e.path == document.path)) {
+      return;
+    }
+    if (!CollectionQuery._filterValue(
+      parameters,
+      document.toMap(document.value),
+    )) {
       return;
     }
     add(document);
@@ -113,10 +250,30 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     notifyListeners();
   }
 
-  T? _fetchChildInternal(String uid) {
-    if (uid.isEmpty) {
-      return null;
+  void _notifyChildChanges(T document) {
+    final found =
+        firstWhereOrNull((e) => e == document || e.path == document.path);
+    if (found == null) {
+      return;
     }
-    return firstWhereOrNull((item) => item.path.last() == uid);
+    if (!CollectionQuery._filterValue(parameters, found.toMap(found.value))) {
+      removeWhere((e) => e == found || e.path == found.path);
+      notifyListeners();
+      return;
+    }
+    if (found != document) {
+      found.value = document.value;
+    }
+    // } else {
+    //   if (CollectionQuery._filterValue(
+    //       parameters, document.toMap(document.value))) {
+    //     add(document);
+    //     notifyListeners();
+    //     return;
+    //   }
+    if (!notifyOnModified) {
+      return;
+    }
+    notifyListeners();
   }
 }

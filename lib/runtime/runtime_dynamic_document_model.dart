@@ -21,7 +21,7 @@ final runtimeDocumentProvider =
 /// You don't need to define a class to hold data strictly,
 /// so you can develop quickly, but it lacks stability.
 class RuntimeDynamicDocumentModel extends RuntimeDocumentModel<DynamicMap>
-    with MapModelMixin<dynamic>, RuntimeDocumentMetaMixin<DynamicMap>
+    with MapModelMixin<String, dynamic>, RuntimeDocumentMetaMixin<DynamicMap>
     implements DynamicDocumentModel {
   /// Specify the path and use [DynamicMap] to
   /// hold the data [LocalDocumentModel].

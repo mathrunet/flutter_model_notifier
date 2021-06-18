@@ -14,7 +14,7 @@ class _LocalDatabase {
     if (!isInitialized) {
       debugPrint(
           "It has not been initialized. Please execute [initialize()] to initialize it.");
-      return const {};
+      return {};
     }
     if (__root == null) {
       final text = Prefs.getString("local://".toSHA1());
@@ -24,7 +24,7 @@ class _LocalDatabase {
         __root = jsonDecodeAsMap(text);
       }
     }
-    return __root ?? const {};
+    return __root ?? {};
   }
 
   static DynamicMap? __root;
@@ -41,7 +41,7 @@ class _LocalDatabase {
   }
 
   static void _registerParent(LocalCollectionModel collection) {
-    final path = _path(collection.path);
+    final path = collection.path.trimQuery();
     if (_parentList.containsKey(path)) {
       _parentList[path]?.add(collection);
     } else {
@@ -50,20 +50,12 @@ class _LocalDatabase {
   }
 
   static void _unregisterParent(LocalCollectionModel collection) {
-    final path = _path(collection.path);
+    final path = collection.path.trimQuery();
     _parentList[path]?.remove(collection);
   }
 
-  static String _path(String path) {
-    if (path.contains("?")) {
-      return path.split("?").first;
-    } else {
-      return path;
-    }
-  }
-
   static void _addChild(LocalDocumentModel document) {
-    final path = document.path.parentPath();
+    final path = document.path.trimQuery().parentPath();
     if (!_parentList.containsKey(path)) {
       return;
     }
@@ -72,7 +64,7 @@ class _LocalDatabase {
   }
 
   static void _removeChild(LocalDocumentModel document) {
-    final path = document.path.parentPath();
+    final path = document.path.trimQuery().parentPath();
     if (!_parentList.containsKey(path)) {
       return;
     }
@@ -80,13 +72,12 @@ class _LocalDatabase {
         ?.forEach((element) => element._removeChildInternal(document));
   }
 
-  // static void _notifyChildChanges(LocalDocumentModel document) {
-  //   final path = document.path.parentPath();
-  //   if (!_parentList.containsKey(path)) {
-  //     return;
-  //   }
-  //   for (final element in _parentList[path]!) {
-  //     element._notifyChildChanges();
-  //   }
-  // }
+  static void _notifyChildChanges(LocalDocumentModel document) {
+    final path = document.path.trimQuery().parentPath();
+    if (!_parentList.containsKey(path)) {
+      return;
+    }
+    _parentList[path]
+        ?.forEach((element) => element._notifyChildChanges(document));
+  }
 }

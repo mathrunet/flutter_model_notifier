@@ -25,11 +25,20 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   ///
   /// In addition, since it can be used as [List],
   /// it is possible to operate the content as it is.
-  LocalCollectionModel(this.path, [List<T>? value])
+  LocalCollectionModel(String path, [List<T>? value])
       : assert(!(path.splitLength() <= 0 || path.splitLength() % 2 != 1),
             "The path hierarchy must be an odd number."),
+        path = path.trimQuery(),
+        parameters = _getParameters(path),
         super(value ?? []) {
     _LocalDatabase._registerParent(this);
+  }
+
+  static Map<String, String> _getParameters(String path) {
+    if (path.contains("?")) {
+      return Uri.parse(path).queryParameters;
+    }
+    return const {};
   }
 
   /// The method to be executed when initialization is performed.
@@ -63,6 +72,17 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   @override
   bool get notifyOnChangeValue => true;
 
+  /// If this value is `true`,
+  /// you will be notified when the element has been modified.
+  bool get notifyOnModified => _notifyOnModified;
+  // ignore: prefer_final_fields
+  bool _notifyOnModified = false;
+
+  /// Change the value of [notifyOnModified] to [notify].
+  void setNotifyOnModified(bool notify) {
+    _notifyOnModified = notify;
+  }
+
   /// Discards any resources used by the object.
   /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).
   ///
@@ -77,6 +97,9 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
 
   /// Path of the local database.
   final String path;
+
+  /// Parameters of the local database.
+  final Map<String, String> parameters;
 
   /// Returns itself after the load finishes.
   @override
@@ -122,7 +145,8 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// Create a new document.
   ///
   /// [id] is the ID of the document. If it is blank, [uuid] is used.
-  T create([String? id]) => createDocument("$path/${id.isEmpty ? uuid : id}");
+  T create([String? id]) =>
+      createDocument("${path.trimQuery()}/${id.isEmpty ? uuid : id}");
 
   /// Register the data for the mock.
   ///
@@ -158,7 +182,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       await _LocalDatabase.initialize();
       await onLoad();
       bool notify = false;
-      final data = _LocalDatabase._root._readFromPath<DynamicMap?>(path);
+      final data = CollectionQuery._filter(
+        parameters,
+        _LocalDatabase._root._readFromPath<DynamicMap?>(path),
+      );
       if (isNotEmpty) {
         clear();
         notify = true;
@@ -170,7 +197,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
           if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
             continue;
           }
-          final value = createDocument("$path/${tmp.key}");
+          final value = createDocument("${path.trimQuery()}/${tmp.key}");
           value.value = value.fromMap(value.filterOnLoad(tmp.value));
           addData.add(value);
         }
@@ -225,6 +252,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     if (any((e) => e == document || e.path == document.path)) {
       return;
     }
+    if (!CollectionQuery._filterValue(
+        parameters, document.toMap(document.value))) {
+      return;
+    }
     add(document);
     notifyListeners();
   }
@@ -237,7 +268,30 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     notifyListeners();
   }
 
-  // void _notifyChildChanges() {
-  //   notifyListeners();
-  // }
+  void _notifyChildChanges(T document) {
+    final found =
+        firstWhereOrNull((e) => e == document || e.path == document.path);
+    if (found == null) {
+      return;
+    }
+    if (!CollectionQuery._filterValue(parameters, found.toMap(found.value))) {
+      remove(found);
+      notifyListeners();
+      return;
+    }
+    if (found != document) {
+      found.value = document.value;
+    }
+    // } else {
+    //   if (CollectionQuery._filterValue(
+    //       parameters, document.toMap(document.value))) {
+    //     add(document);
+    //     notifyListeners();
+    //     return;
+    //   }
+    if (!notifyOnModified) {
+      return;
+    }
+    notifyListeners();
+  }
 }

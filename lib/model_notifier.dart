@@ -13,6 +13,7 @@ import "dart:collection";
 import 'dart:convert';
 import "dart:math";
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:katana/katana.dart';
 import 'package:http/http.dart';
@@ -45,15 +46,14 @@ part "src/collection_mock_model.dart";
 part "src/dynamic_document_model.dart";
 part "src/dynamic_collection_model.dart";
 
-part "src/map_notifier.dart";
-part "src/list_notifier.dart";
+part "src/listenable_map.dart";
+part "src/listenable_list.dart";
 part "src/map_model_mixin.dart";
 part "src/list_model_mixin.dart";
 part "src/change_notifier_listener.dart";
 
 part "src/document_model.dart";
 
-part "local/extensions.dart";
 part "local/local_database.dart";
 part "local/local_document_model.dart";
 part "local/local_collection_model.dart";

@@ -1,17 +1,17 @@
 part of model_notifier;
 
-/// Widget that listens for ChangeNotifiers and
+/// Widget that listens for Listenables and
 /// rebuilds the widgets inside when there is an update.
-class ChangeNotifierListener<T extends ChangeNotifier> extends StatefulWidget {
-  /// Widget that listens for ChangeNotifiers and
+class ListenableListener<T extends Listenable> extends StatefulWidget {
+  /// Widget that listens for Listenables and
   /// rebuilds the widgets inside when there is an update.
-  const ChangeNotifierListener({
+  const ListenableListener({
     Key? key,
     required this.notifier,
     required this.builder,
   }) : super(key: key);
 
-  /// ChangeNotifier to monitor.
+  /// Listenable to monitor.
   final T notifier;
 
   /// Widget builder to update.
@@ -36,11 +36,11 @@ class ChangeNotifierListener<T extends ChangeNotifier> extends StatefulWidget {
   /// [State] objects.
   @override
   @protected
-  State<StatefulWidget> createState() => _ChangeNotifierListenerState<T>();
+  State<StatefulWidget> createState() => _ListenableListenerState<T>();
 }
 
-class _ChangeNotifierListenerState<T extends ChangeNotifier>
-    extends State<ChangeNotifierListener<T>> {
+class _ListenableListenerState<T extends Listenable>
+    extends State<ListenableListener<T>> {
   @override
   void initState() {
     super.initState();
@@ -54,7 +54,7 @@ class _ChangeNotifierListenerState<T extends ChangeNotifier>
   }
 
   @override
-  void didUpdateWidget(ChangeNotifierListener<T> oldWidget) {
+  void didUpdateWidget(ListenableListener<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.notifier != oldWidget.notifier) {
       oldWidget.notifier.removeListener(_handledOnUpdate);

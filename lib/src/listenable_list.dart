@@ -3,16 +3,41 @@ part of model_notifier;
 /// This is a [ChangeNotifier] class that can be handled as a list.
 ///
 /// When the contents of the list change, you will be notified of the change.
-class ListNotifier<T extends Listenable> extends ChangeNotifier
-    implements List<T> {
+class ListenableList<T> extends ValueNotifier<List<T>>
+    implements List<T>, ValueListenable<List<T>> {
   /// This is a [ChangeNotifier] class that can be handled as a list.
   ///
   /// When the contents of the list change, you will be notified of the change.
-  ListNotifier([List<T>? listenables]) : _listenables = listenables ?? [] {
-    _listenables.forEach((e) => e.addListener(notifyListeners));
+  ListenableList() : super([]);
+
+  /// This is a [ChangeNotifier] class that can be handled as a list.
+  ///
+  /// When the contents of the list change, you will be notified of the change.
+  ListenableList.from(List<T> list) : super(list);
+
+  /// This is a [ChangeNotifier] class that can be handled as a list.
+  ///
+  /// When the contents of the list change, you will be notified of the change.
+  factory ListenableList.fromListenable(Listenable listenable) {
+    if (listenable is ListenableList<T>) {
+      final list = ListenableList<T>.from(listenable);
+      listenable.addListener(list.notifyListeners);
+      return list;
+    } else if (listenable is ValueListenable<List<T>>) {
+      final list = ListenableList<T>.from(listenable.value);
+      listenable.addListener(list.notifyListeners);
+      return list;
+    } else {
+      final list = ListenableList<T>();
+      listenable.addListener(list.notifyListeners);
+      return list;
+    }
   }
 
-  final List<T> _listenables;
+  /// Sends a notification to itself when the target [listenable] is updated.
+  void dependOn(Listenable listenable) {
+    listenable.addListener(notifyListeners);
+  }
 
   /// Discards any resources used by the object. After this is called, the
   /// object is not in a usable state and should be discarded (calls to
@@ -25,8 +50,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _listenables.forEach((e) => e.removeListener(notifyListeners));
-    _listenables.clear();
+    value.clear();
   }
 
   /// The equality operator.
@@ -49,15 +73,15 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (_listenables == other) {
+    if (value == other) {
       return true;
     }
-    if (other is ListNotifier) {
-      if (_listenables.length != other.length) {
+    if (other is ListenableList) {
+      if (value.length != other.length) {
         return false;
       }
-      for (int i = 0; i < _listenables.length; i++) {
-        if (_listenables[i] != other[i]) {
+      for (int i = 0; i < value.length; i++) {
+        if (value[i] != other[i]) {
           return false;
         }
       }
@@ -89,7 +113,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// it should override the [operator ==] operator as well to maintain consistency.
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  int get hashCode => _listenables.hashCode;
+  int get hashCode => value.hashCode;
 
   /// A string representation of this object.
   ///
@@ -110,7 +134,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// so [newLength] must not be greater than the current length if the element type [E] is non-nullable.
   @override
   set length(int value) {
-    _listenables.length = value;
+    this.value.length = value;
     notifyListeners();
   }
 
@@ -121,14 +145,14 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The default behavior is to return a normal growable list.
   /// Some list types may choose to return a list of the same type as themselves (see [Uint8List.+]);
   @override
-  List<T> operator +(List<T> other) => _listenables + other;
+  List<T> operator +(List<T> other) => value + other;
 
   /// The object at the given [index] in the list.
   ///
   /// The [index] must be a valid index of this list,
   /// which means that index must be non-negative and less than [length].
   @override
-  T operator [](int index) => _listenables[index];
+  T operator [](int index) => value[index];
 
   /// Sets the value at the given [index] in the list to [value].
   ///
@@ -136,8 +160,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// which means that index must be non-negative and less than [length].
   @override
   void operator []=(int index, T value) {
-    _listenables[index].removeListener(notifyListeners);
-    _listenables[index] = value..addListener(notifyListeners);
+    this.value[index] = value;
     notifyListeners();
   }
 
@@ -146,7 +169,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void add(T value) {
-    _listenables.add(value..addListener(notifyListeners));
+    this.value.add(value);
     notifyListeners();
   }
 
@@ -156,8 +179,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void addAll(Iterable<T> iterable) {
-    iterable.forEach((e) => e.addListener(notifyListeners));
-    _listenables.addAll(iterable);
+    value.addAll(iterable);
     notifyListeners();
   }
 
@@ -166,8 +188,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void clear() {
-    _listenables.forEach((e) => e.removeListener(notifyListeners));
-    _listenables.clear();
+    value.clear();
     notifyListeners();
   }
 
@@ -192,11 +213,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// must be non-`null`.
   @override
   void fillRange(int start, int end, [T? fillValue]) {
-    _listenables
-        .getRange(start, end)
-        .forEach((e) => e.removeListener(notifyListeners));
-    fillValue?.addListener(notifyListeners);
-    _listenables.fillRange(start, end, fillValue);
+    value.fillRange(start, end, fillValue);
     notifyListeners();
   }
 
@@ -209,8 +226,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The [index] value must be non-negative and no greater than [length].
   @override
   void insert(int index, T element) {
-    element.addListener(notifyListeners);
-    _listenables.insert(index, element);
+    value.insert(index, element);
     notifyListeners();
   }
 
@@ -223,8 +239,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The [index] value must be non-negative and no greater than [length].
   @override
   void insertAll(int index, Iterable<T> iterable) {
-    iterable.forEach((e) => e.addListener(notifyListeners));
-    _listenables.insertAll(index, iterable);
+    value.insertAll(index, iterable);
     notifyListeners();
   }
 
@@ -246,10 +261,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   bool remove(Object? value) {
-    if (_listenables.remove(value)) {
-      if (value is Listenable) {
-        value.removeListener(notifyListeners);
-      }
+    if (this.value.remove(value)) {
       notifyListeners();
       return true;
     }
@@ -268,8 +280,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   T removeAt(int index) {
-    final value = _listenables.removeAt(index);
-    value.removeListener(notifyListeners);
+    final value = this.value.removeAt(index);
     notifyListeners();
     return value;
   }
@@ -279,8 +290,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable and non-empty.
   @override
   T removeLast() {
-    final value = _listenables.removeLast();
-    value.removeListener(notifyListeners);
+    final value = this.value.removeLast();
     notifyListeners();
     return value;
   }
@@ -298,10 +308,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void removeRange(int start, int end) {
-    _listenables
-        .getRange(start, end)
-        .forEach((e) => e.removeListener(notifyListeners));
-    _listenables.removeRange(start, end);
+    value.removeRange(start, end);
     notifyListeners();
   }
 
@@ -316,11 +323,10 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void removeWhere(bool Function(T element) test) {
-    _listenables.removeWhere((e) {
+    value.removeWhere((e) {
       if (!test(e)) {
         return false;
       }
-      e.removeListener(notifyListeners);
       return true;
     });
     notifyListeners();
@@ -353,11 +359,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// [setRange] instead.
   @override
   void replaceRange(int start, int end, Iterable<T> replacement) {
-    _listenables
-        .getRange(start, end)
-        .forEach((e) => e.removeListener(notifyListeners));
-    replacement.forEach((e) => e.addListener(notifyListeners));
-    _listenables.replaceRange(start, end, replacement);
+    value.replaceRange(start, end, replacement);
     notifyListeners();
   }
 
@@ -372,11 +374,10 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list must be growable.
   @override
   void retainWhere(bool Function(T element) test) {
-    _listenables.retainWhere((e) {
+    value.retainWhere((e) {
       if (test(e)) {
         return true;
       }
-      e.removeListener(notifyListeners);
       return false;
     });
     notifyListeners();
@@ -385,7 +386,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// An [Iterable] of the objects in this list in reverse order.
   @override
   Iterable<T> get reversed {
-    final iterable = _listenables.reversed;
+    final iterable = value.reversed;
     notifyListeners();
     return iterable;
   }
@@ -410,11 +411,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// `setAll` operation.
   @override
   void setAll(int index, Iterable<T> iterable) {
-    _listenables
-        .getRange(index, index + iterable.length)
-        .forEach((e) => e.removeListener(notifyListeners));
-    iterable.forEach((e) => e.addListener(notifyListeners));
-    _listenables.setAll(index, iterable);
+    value.setAll(index, iterable);
     notifyListeners();
   }
 
@@ -445,24 +442,14 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// made.
   @override
   void setRange(int start, int end, Iterable<T> iterable, [int skipCount = 0]) {
-    int i = 0;
-    _listenables
-        .getRange(start, end)
-        .forEach((e) => e.removeListener(notifyListeners));
-    iterable.forEach((element) {
-      if (i >= skipCount && (end - start) + skipCount >= i) {
-        element.addListener(notifyListeners);
-      }
-      i++;
-    });
-    _listenables.setRange(start, end, iterable, skipCount);
+    value.setRange(start, end, iterable, skipCount);
     notifyListeners();
   }
 
   /// Shuffles the elements of this list randomly.
   @override
   void shuffle([Random? random]) {
-    _listenables.shuffle(random);
+    value.shuffle(random);
     notifyListeners();
   }
 
@@ -496,7 +483,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// ```
   @override
   void sort([int Function(T a, T b)? compare]) {
-    _listenables.sort(compare);
+    value.sort(compare);
     notifyListeners();
   }
 
@@ -505,7 +492,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// Checks every element in iteration order, and returns `true` if
   /// any of them make [test] return `true`, otherwise returns false.
   @override
-  bool any(bool test(T element)) => _listenables.any(test);
+  bool any(bool test(T element)) => value.any(test);
 
   /// Returns a view of this list as a list of [R] instances.
   ///
@@ -520,7 +507,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   ///
   /// Typically implemented as `List.castFrom<E, R>(this)`.
   @override
-  List<E> cast<E>() => _listenables.cast<E>();
+  List<E> cast<E>() => value.cast<E>();
 
   /// Whether the collection contains an element equal to [element].
   ///
@@ -537,7 +524,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// Likewise the `Iterable` returned by a [Map.keys] call
   /// should use the same equality that the `Map` uses for keys.
   @override
-  bool contains(Object? element) => _listenables.contains(element);
+  bool contains(Object? element) => value.contains(element);
 
   /// Returns the [index]th element.
   ///
@@ -549,14 +536,14 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// first [index] elements and then returning the next.
   /// Some iterables may have a more efficient way to find the element.
   @override
-  T elementAt(int index) => _listenables.elementAt(index);
+  T elementAt(int index) => value.elementAt(index);
 
   /// Checks whether every element of this iterable satisfies [test].
   ///
   /// Checks every element in iteration order, and returns `false` if
   /// any of them make [test] return `false`, otherwise returns `true`.
   @override
-  bool every(bool test(T element)) => _listenables.every(test);
+  bool every(bool test(T element)) => value.every(test);
 
   /// Expands each element of this [Iterable] into zero or more elements.
   ///
@@ -577,7 +564,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// print(duplicated); // => [1, 1, 2, 2, 3, 3]
   /// ```
   @override
-  Iterable<E> expand<E>(Iterable<E> f(T element)) => _listenables.expand(f);
+  Iterable<E> expand<E>(Iterable<E> f(T element)) => value.expand(f);
 
   /// Returns the first element.
   ///
@@ -585,7 +572,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// Otherwise returns the first element in the iteration order,
   /// equivalent to `this.elementAt(0)`.
   @override
-  T get first => _listenables.first;
+  T get first => value.first;
 
   /// Put the value at the first [element].
   @override
@@ -605,7 +592,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// If [orElse] is omitted, it defaults to throwing a [StateError].
   @override
   T firstWhere(bool test(T element), {T Function()? orElse}) =>
-      _listenables.firstWhere(test, orElse: orElse);
+      value.firstWhere(test, orElse: orElse);
 
   /// Reduces a collection to a single value by iteratively combining each
   /// element of the collection with an existing value
@@ -626,7 +613,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// ```
   @override
   E fold<E>(E initialValue, E combine(E previousValue, T element)) =>
-      _listenables.fold(initialValue, combine);
+      value.fold(initialValue, combine);
 
   /// Returns the lazy concatenation of this iterable and [other].
   ///
@@ -634,24 +621,24 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// and, after that, the elements of [other], in the same order as in the
   /// original iterables.
   @override
-  Iterable<T> followedBy(Iterable<T> other) => _listenables.followedBy(other);
+  Iterable<T> followedBy(Iterable<T> other) => value.followedBy(other);
 
   /// Applies the function [f] to each element of this collection in iteration
   /// order.
   @override
-  void forEach(void f(T element)) => _listenables.forEach(f);
+  void forEach(void f(T element)) => value.forEach(f);
 
   /// Returns `true` if there are no elements in this collection.
   ///
   /// May be computed by checking if `iterator.moveNext()` returns `false`.
   @override
-  bool get isEmpty => _listenables.isEmpty;
+  bool get isEmpty => value.isEmpty;
 
   /// Returns true if there is at least one element in this collection.
   ///
   /// May be computed by checking if `iterator.moveNext()` returns `true`.
   @override
-  bool get isNotEmpty => _listenables.isNotEmpty;
+  bool get isNotEmpty => value.isNotEmpty;
 
   /// Returns a new `Iterator` that allows iterating the elements of this
   /// `Iterable`.
@@ -680,7 +667,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// Any *modifiable* iterable class should specify which operations will
   /// break iteration.
   @override
-  Iterator<T> get iterator => _listenables.iterator;
+  Iterator<T> get iterator => value.iterator;
 
   /// Converts each element to a [String] and concatenates the strings.
   ///
@@ -689,7 +676,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// and then concatenates the strings, with the
   /// [separator] string interleaved between the elements.
   @override
-  String join([String separator = ""]) => _listenables.join(separator);
+  String join([String separator = ""]) => value.join(separator);
 
   /// Returns the last element.
   ///
@@ -700,7 +687,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// (for example a list can directly access the last element,
   /// without iterating through the previous ones).
   @override
-  T get last => _listenables.last;
+  T get last => value.last;
 
   /// Put the value at the last [element].
   @override
@@ -725,13 +712,13 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// If [orElse] is omitted, it defaults to throwing a [StateError].
   @override
   T lastWhere(bool test(T element), {T Function()? orElse}) =>
-      _listenables.lastWhere(test, orElse: orElse);
+      value.lastWhere(test, orElse: orElse);
 
   /// The number of objects in this list.
   ///
   /// The valid indices for a list are `0` through `length - 1`.
   @override
-  int get length => _listenables.length;
+  int get length => value.length;
 
   /// Returns a new lazy [Iterable] with elements that are created by
   /// calling `f` on each element of this `Iterable` in iteration order.
@@ -746,7 +733,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// on any element where the result isn't needed.
   /// For example, [elementAt] may call `f` only once.
   @override
-  Iterable<E> map<E>(E f(T e)) => _listenables.map(f);
+  Iterable<E> map<E>(E f(T e)) => value.map(f);
 
   /// Reduces a collection to a single value by iteratively combining elements
   /// of the collection using the provided function.
@@ -769,13 +756,13 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// iterable.reduce((value, element) => value + element);
   /// ```
   @override
-  T reduce(T combine(T value, T element)) => _listenables.reduce(combine);
+  T reduce(T combine(T value, T element)) => value.reduce(combine);
 
   /// Checks that this iterable has only one element, and returns that element.
   ///
   /// Throws a [StateError] if `this` is empty or has more than one element.
   @override
-  T get single => _listenables.single;
+  T get single => value.single;
 
   /// Returns the single element that satisfies [test].
   ///
@@ -786,7 +773,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// If [orElse] is omitted, it defaults to throwing a [StateError].
   @override
   T singleWhere(bool test(T element), {T Function()? orElse}) =>
-      _listenables.singleWhere(test, orElse: orElse);
+      value.singleWhere(test, orElse: orElse);
 
   /// Returns an [Iterable] that provides all but the first [count] elements.
   ///
@@ -803,7 +790,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   ///
   /// The [count] must not be negative.
   @override
-  Iterable<T> skip(int n) => _listenables.skip(n);
+  Iterable<T> skip(int n) => value.skip(n);
 
   /// Returns an `Iterable` that skips leading elements while [test] is satisfied.
   ///
@@ -816,7 +803,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// otherwise it iterates the remaining elements in their original order,
   /// starting with the first element for which `test(element)` returns `false`.
   @override
-  Iterable<T> skipWhile(bool test(T value)) => _listenables.skipWhile(test);
+  Iterable<T> skipWhile(bool test(T value)) => value.skipWhile(test);
 
   /// Returns a lazy iterable of the [count] first elements of this iterable.
   ///
@@ -828,7 +815,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   ///
   /// The `count` must not be negative.
   @override
-  Iterable<T> take(int n) => _listenables.take(n);
+  Iterable<T> take(int n) => value.take(n);
 
   /// Returns a lazy iterable of the leading elements satisfying [test].
   ///
@@ -839,7 +826,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// element is found where `test(element)` is false. At that point,
   /// the returned iterable stops (its `moveNext()` returns false).
   @override
-  Iterable<T> takeWhile(bool test(T value)) => _listenables.takeWhile(test);
+  Iterable<T> takeWhile(bool test(T value)) => value.takeWhile(test);
 
   /// Creates a [List] containing the elements of this [Iterable].
   ///
@@ -847,8 +834,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The list is fixed-length if [growable] is false.
   @override
   @override
-  List<T> toList({bool growable = true}) =>
-      _listenables.toList(growable: growable);
+  List<T> toList({bool growable = true}) => value.toList(growable: growable);
 
   /// Creates a [Set] containing the same elements as this iterable.
   ///
@@ -858,7 +844,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// The order of the elements in the set is not guaranteed to be the same
   /// as for the iterable.
   @override
-  Set<T> toSet() => _listenables.toSet();
+  Set<T> toSet() => value.toSet();
 
   /// Returns a new lazy [Iterable] with all elements that satisfy the
   /// predicate [test].
@@ -873,7 +859,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// the returned [Iterable] may invoke the supplied
   /// function [test] multiple times on the same element.
   @override
-  Iterable<T> where(bool test(T element)) => _listenables.where(test);
+  Iterable<T> where(bool test(T element)) => value.where(test);
 
   /// Returns a new lazy [Iterable] with all elements that have type [T].
   ///
@@ -885,7 +871,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// the returned [Iterable] may yield different results,
   /// if the underlying elements change between iterations.
   @override
-  Iterable<E> whereType<E>() => _listenables.whereType<E>();
+  Iterable<E> whereType<E>() => value.whereType<E>();
 
   /// An unmodifiable [Map] view of this list.
   ///
@@ -899,7 +885,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// map.keys.toList(); // [0, 1, 2, 3]
   /// ```
   @override
-  Map<int, T> asMap() => _listenables.asMap();
+  Map<int, T> asMap() => value.asMap();
 
   /// Creates an [Iterable] that iterates over a range of elements.
   ///
@@ -923,7 +909,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// range.join(', ');  // 'green, blue'
   /// ```
   @override
-  Iterable<T> getRange(int start, int end) => _listenables.getRange(start, end);
+  Iterable<T> getRange(int start, int end) => value.getRange(start, end);
 
   /// The first index of [element] in this list.
   ///
@@ -940,8 +926,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// notes.indexOf('fa');    // -1
   /// ```
   @override
-  int indexOf(T element, [int start = 0]) =>
-      _listenables.indexOf(element, start);
+  int indexOf(T element, [int start = 0]) => value.indexOf(element, start);
 
   /// The first index in the list that satisfies the provided [test].
   ///
@@ -961,7 +946,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// ```
   @override
   int indexWhere(bool test(T element), [int start = 0]) =>
-      _listenables.indexWhere(test, start);
+      value.indexWhere(test, start);
 
   /// The last index of [element] in this list.
   ///
@@ -983,8 +968,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// notes.lastIndexOf('fa');  // -1
   /// ```
   @override
-  int lastIndexOf(T element, [int? start]) =>
-      _listenables.lastIndexOf(element, start);
+  int lastIndexOf(T element, [int? start]) => value.lastIndexOf(element, start);
 
   /// The last index in the list that satisfies the provided [test].
   ///
@@ -1005,7 +989,7 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// ```
   @override
   int lastIndexWhere(bool test(T element), [int? start]) =>
-      _listenables.lastIndexWhere(test, start);
+      value.lastIndexWhere(test, start);
 
   /// Returns a new list containing the elements between [start] and [end].
   ///
@@ -1028,5 +1012,5 @@ class ListNotifier<T extends Listenable> extends ChangeNotifier
   /// 0 ≤ `start` ≤ `end` ≤ [length]
   /// If `end` is equal to `start`, then the returned list is empty.
   @override
-  List<T> sublist(int start, [int? end]) => _listenables.sublist(start, end);
+  List<T> sublist(int start, [int? end]) => value.sublist(start, end);
 }

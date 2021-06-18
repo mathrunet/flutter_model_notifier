@@ -204,7 +204,7 @@ packages:
       name: katana
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.2+14"
+    version: "0.8.2+17"
   matcher:
     dependency: transitive
     description:
@@ -260,7 +260,7 @@ packages:
       name: package_info_plus_windows
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.1"
+    version: "1.0.2"
   path:
     dependency: transitive
     description:
@@ -309,7 +309,7 @@ packages:
       name: pedantic
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.11.0"
+    version: "1.11.1"
   platform:
     dependency: transitive
     description:

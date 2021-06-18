@@ -4,7 +4,7 @@ part of model_notifier;
 ///
 /// All keys in the map will be of type [String].
 abstract class MapModel<T> extends ValueModel<Map<String, T>>
-    with MapModelMixin<T>
+    with MapModelMixin<String, T>
     implements Map<String, T> {
   /// A model that can be treated as a map.
   ///

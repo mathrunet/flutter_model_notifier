@@ -21,7 +21,7 @@ final localDocumentProvider =
 /// You don't need to define a class to hold data strictly,
 /// so you can develop quickly, but it lacks stability.
 class LocalDynamicDocumentModel extends LocalDocumentModel<DynamicMap>
-    with MapModelMixin<dynamic>, LocalDocumentMetaMixin<DynamicMap>
+    with MapModelMixin<String, dynamic>, LocalDocumentMetaMixin<DynamicMap>
     implements DynamicDocumentModel {
   /// Specify the path and use [DynamicMap] to
   /// hold the data [LocalDocumentModel].

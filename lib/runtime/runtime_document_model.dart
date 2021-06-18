@@ -33,7 +33,27 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
       return;
     }
     super.value = newValue;
-    // _LocalDatabase._notifyChildChanges(this);
+  }
+
+  /// Call all the registered listeners.
+  ///
+  /// Call this method whenever the object changes, to notify any clients the
+  /// object may have changed. Listeners that are added during this iteration
+  /// will not be visited. Listeners that are removed during this iteration will
+  /// not be visited after they are removed.
+  ///
+  /// Exceptions thrown by listeners will be caught and reported using
+  /// [FlutterError.reportError].
+  ///
+  /// This method must not be called after [dispose] has been called.
+  ///
+  /// Surprising behavior can result when reentrantly removing a listener (e.g.
+  /// in response to a notification) that has been registered multiple times.
+  /// See the discussion at [removeListener].
+  @override
+  void notifyListeners() {
+    _RuntimeDatabase._notifyChildChanges(this);
+    super.notifyListeners();
   }
 
   /// Key for UID values.
@@ -54,11 +74,6 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     if (Config.isEnabledMockup && initialMock != null) {
       // ignore: null_check_on_nullable_type_parameter
       value = initialMock!;
-    } else {
-      final tmp = _RuntimeDatabase._fetchChild(path);
-      if (tmp != null && tmp.value is T) {
-        value = tmp.value;
-      }
     }
   }
 
@@ -154,7 +169,8 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   @override
   Future<RuntimeDocumentModel<T>> load() async {
     await onLoad();
-    value = fromMap(filterOnLoad(toMap(value)));
+    value = fromMap(filterOnLoad(
+        _RuntimeDatabase._root._readFromPath<DynamicMap>(path) ?? {}));
     notifyListeners();
     await onDidLoad();
     return this;
@@ -166,7 +182,7 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   @override
   Future<RuntimeDocumentModel<T>> save() async {
     await onSave();
-    value = fromMap(filterOnSave(toMap(value)));
+    _RuntimeDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
     _RuntimeDatabase._addChild(this);
     notifyListeners();
     await onDidSave();
@@ -198,6 +214,7 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// Deleted documents are immediately reflected and removed from related collections, etc.
   Future<void> delete() async {
     await onDelete();
+    _RuntimeDatabase._root._deleteFromPath(path);
     _RuntimeDatabase._removeChild(this);
     notifyListeners();
     await onDidDelete();

@@ -3,10 +3,15 @@ part of model_notifier;
 class _RuntimeDatabase {
   const _RuntimeDatabase();
 
+  static DynamicMap get _root {
+    return __root ??= {};
+  }
+
+  static DynamicMap? __root;
   static final Map<String, Set<RuntimeCollectionModel>> _parentList = {};
 
   static void _registerParent(RuntimeCollectionModel collection) {
-    final path = _path(collection.path);
+    final path = collection.path.trimQuery();
     if (_parentList.containsKey(path)) {
       _parentList[path]?.add(collection);
     } else {
@@ -15,35 +20,12 @@ class _RuntimeDatabase {
   }
 
   static void _unregisterParent(RuntimeCollectionModel collection) {
-    final path = _path(collection.path);
+    final path = collection.path.trimQuery();
     _parentList[path]?.remove(collection);
   }
 
-  static String _path(String path) {
-    if (path.contains("?")) {
-      return path.split("?").first;
-    } else {
-      return path;
-    }
-  }
-
-  static RuntimeDocumentModel? _fetchChild(String path) {
-    final parentPath = path.parentPath();
-    final uid = path.last();
-    if (!_parentList.containsKey(parentPath)) {
-      return null;
-    }
-    return _parentList[parentPath]?.fold<RuntimeDocumentModel?>(null,
-        (val, child) {
-      if (val != null) {
-        return val;
-      }
-      return child._fetchChildInternal(uid);
-    });
-  }
-
   static void _addChild(RuntimeDocumentModel document) {
-    final path = document.path.parentPath();
+    final path = document.path.trimQuery().parentPath();
     if (!_parentList.containsKey(path)) {
       return;
     }
@@ -52,11 +34,20 @@ class _RuntimeDatabase {
   }
 
   static void _removeChild(RuntimeDocumentModel document) {
-    final path = document.path.parentPath();
+    final path = document.path.trimQuery().parentPath();
     if (!_parentList.containsKey(path)) {
       return;
     }
     _parentList[path]
         ?.forEach((element) => element._removeChildInternal(document));
+  }
+
+  static void _notifyChildChanges(RuntimeDocumentModel document) {
+    final path = document.path.trimQuery().parentPath();
+    if (!_parentList.containsKey(path)) {
+      return;
+    }
+    _parentList[path]
+        ?.forEach((element) => element._notifyChildChanges(document));
   }
 }
