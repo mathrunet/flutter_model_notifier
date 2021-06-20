@@ -151,5 +151,5 @@ abstract class ValueModel<T> extends Model<T> implements ValueListenable<T> {
   /// Other classes have no meaningful textual representation that a program will care about.
   /// Such classes will typically override toString to provide useful information when inspecting the object, mainly for debugging or logging.
   @override
-  String toString() => "${this}($value)";
+  String toString() => "$runtimeType($value)";
 }

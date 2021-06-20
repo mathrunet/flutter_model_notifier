@@ -28,6 +28,7 @@ export 'package:flutter_riverpod/flutter_riverpod.dart';
 export 'package:hooks_riverpod/hooks_riverpod.dart';
 export 'package:katana/katana.dart';
 
+part 'src/typedef.dart';
 part 'src/extensions.dart';
 part 'src/functions.dart';
 part "src/model.dart";
