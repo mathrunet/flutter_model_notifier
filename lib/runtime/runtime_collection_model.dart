@@ -24,9 +24,7 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
             "The path hierarchy must be an odd number."),
         path = path.trimQuery(),
         parameters = _getParameters(path),
-        super(value ?? []) {
-    _RuntimeDatabase._registerParent(this);
-  }
+        super(value ?? []);
 
   static Map<String, String> _getParameters(String path) {
     if (path.contains("?")) {
@@ -60,7 +58,7 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _RuntimeDatabase._unregisterParent(this);
+    _RuntimeDatabase._removeCollection(this);
   }
 
   /// Initial value of mock.
@@ -95,14 +93,10 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   /// Parameters of the runtime database.
   final Map<String, String> parameters;
 
-  /// Returns itself after the load finishes.
+  /// Returns itself after the load/save finishes.
   @override
-  Future<RuntimeCollectionModel<T>> get loading => Future.value(this);
-
-  /// Returns itself after the save finishes.
-  @override
-  Future<RuntimeCollectionModel<T>> get saving => throw UnimplementedError(
-      "Save process should be done for each document.");
+  Future<void> get future => _completer?.future ?? Future.value();
+  Completer<void>? _completer;
 
   /// Callback before the load has been done.
   @override
@@ -166,33 +160,47 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<RuntimeCollectionModel<T>> load() async {
-    await onLoad();
-    bool notify = false;
-    final data = CollectionQuery._filter(
-      parameters,
-      _RuntimeDatabase._root._readFromPath<DynamicMap?>(path),
-    );
-    if (isNotEmpty) {
-      clear();
-      notify = true;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    if (data.isNotEmpty) {
-      notify = true;
-      final addData = <T>[];
-      for (final tmp in data!.entries) {
-        if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
-          continue;
-        }
-        final value = createDocument("${path.trimQuery()}/${tmp.key}");
-        value.value = value.fromMap(value.filterOnLoad(tmp.value));
-        addData.add(value);
+    _completer = Completer<void>();
+    try {
+      await onLoad();
+      bool notify = false;
+      _RuntimeDatabase._addCollection(this);
+      final data = CollectionQuery._filter(
+        parameters,
+        _RuntimeDatabase._root._readFromPath<DynamicMap?>(path),
+      );
+      if (isNotEmpty) {
+        clear();
+        notify = true;
       }
-      addAll(addData);
+      if (data.isNotEmpty) {
+        notify = true;
+        final addData = <T>[];
+        for (final tmp in data!.entries) {
+          if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
+            continue;
+          }
+          final value = createDocument("${path.trimQuery()}/${tmp.key}");
+          _RuntimeDatabase._addDocument(value);
+          value.value = value.fromMap(value.filterOnLoad(tmp.value));
+          addData.add(value);
+        }
+        addAll(addData);
+      }
+      if (notify) {
+        notifyListeners();
+      }
+      await onDidLoad();
+      _completer?.complete();
+      _completer = null;
+    } finally {
+      _completer?.completeError(e);
+      _completer = null;
     }
-    if (notify) {
-      notifyListeners();
-    }
-    await onDidLoad();
     return this;
   }
 
@@ -263,6 +271,7 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     }
     if (found != document) {
       found.value = document.value;
+      found.notifyListeners();
     }
     // } else {
     //   if (CollectionQuery._filterValue(

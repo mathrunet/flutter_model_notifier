@@ -77,6 +77,18 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     }
   }
 
+  /// Discards any resources used by the object.
+  /// After this is called, the object is not in a usable state and should be discarded (calls to [addListener] and [removeListener] will throw after the object is disposed).
+  ///
+  /// This method should only be called by the object's owner.
+  @override
+  @protected
+  @mustCallSuper
+  void dispose() {
+    super.dispose();
+    _RuntimeDatabase._removeDocument(this);
+  }
+
   /// Initial value of mock.
   @override
   @protected
@@ -85,13 +97,10 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// Path of the local database.
   final String path;
 
-  /// Returns itself after the load finishes.
+  /// Returns itself after the load/save finishes.
   @override
-  Future<RuntimeDocumentModel<T>> get loading => Future.value(this);
-
-  /// Returns itself after the save finishes.
-  @override
-  Future<RuntimeDocumentModel<T>> get saving => Future.value(this);
+  Future<void> get future => _completer?.future ?? Future.value();
+  Completer<void>? _completer;
 
   /// Returns itself after the delete finishes.
   Future<void> get deleting => Future.value();
@@ -168,11 +177,24 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<RuntimeDocumentModel<T>> load() async {
-    await onLoad();
-    value = fromMap(filterOnLoad(
-        _RuntimeDatabase._root._readFromPath<DynamicMap>(path) ?? {}));
-    notifyListeners();
-    await onDidLoad();
+    if (_completer != null) {
+      await future;
+      return this;
+    }
+    _completer = Completer<void>();
+    try {
+      await onLoad();
+      _RuntimeDatabase._addDocument(this);
+      value = fromMap(filterOnLoad(
+          _RuntimeDatabase._root._readFromPath<DynamicMap>(path) ?? {}));
+      notifyListeners();
+      await onDidLoad();
+      _completer?.complete();
+      _completer = null;
+    } finally {
+      _completer?.completeError(e);
+      _completer = null;
+    }
     return this;
   }
 
@@ -181,11 +203,26 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<RuntimeDocumentModel<T>> save() async {
-    await onSave();
-    _RuntimeDatabase._root._writeToPath(path, filterOnSave(toMap(value)));
-    _RuntimeDatabase._addChild(this);
-    notifyListeners();
-    await onDidSave();
+    if (_completer != null) {
+      await future;
+      return this;
+    }
+    _completer = Completer<void>();
+    try {
+      await onSave();
+      _RuntimeDatabase._addDocument(this);
+      final data = filterOnSave(toMap(value));
+      _RuntimeDatabase._root._writeToPath(path, data);
+      _RuntimeDatabase._syncDocument(this, data);
+      _RuntimeDatabase._addChild(this);
+      notifyListeners();
+      await onDidSave();
+      _completer?.complete();
+      _completer = null;
+    } finally {
+      _completer?.completeError(e);
+      _completer = null;
+    }
     return this;
   }
 
@@ -213,11 +250,24 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   ///
   /// Deleted documents are immediately reflected and removed from related collections, etc.
   Future<void> delete() async {
-    await onDelete();
-    _RuntimeDatabase._root._deleteFromPath(path);
-    _RuntimeDatabase._removeChild(this);
-    notifyListeners();
-    await onDidDelete();
+    if (_completer != null) {
+      await future;
+      return;
+    }
+    _completer = Completer<void>();
+    try {
+      await onDelete();
+      _RuntimeDatabase._root._deleteFromPath(path);
+      _RuntimeDatabase._deleteDocument(this);
+      _RuntimeDatabase._removeChild(this);
+      value = fromMap(filterOnLoad(const {}));
+      await onDidDelete();
+      _completer?.complete();
+      _completer = null;
+    } finally {
+      _completer?.completeError(e);
+      _completer = null;
+    }
   }
 
   /// The equality operator.

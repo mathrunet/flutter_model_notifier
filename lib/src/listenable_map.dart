@@ -35,8 +35,17 @@ class ListenableMap<K, V> extends ValueNotifier<Map<K, V>>
   }
 
   /// Sends a notification to itself when the target [listenable] is updated.
-  void dependOn(Listenable listenable) {
-    listenable.addListener(notifyListeners);
+  void dependOn(
+    Listenable listenable, [
+    Map<K, V> Function(Map<K, V> origin)? filter,
+  ]) {
+    listenable.addListener(() {
+      if (filter != null) {
+        value = filter.call(value);
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   /// Discards any resources used by the object. After this is called, the

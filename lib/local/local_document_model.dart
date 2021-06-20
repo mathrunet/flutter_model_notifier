@@ -103,21 +103,10 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// Path of the local database.
   final String path;
 
-  /// Returns itself after the load finishes.
+  /// Returns itself after the load/save finishes.
   @override
-  Future<LocalDocumentModel<T>> get loading =>
-      _loadingCompleter?.future ?? Future.value(this);
-  Completer<LocalDocumentModel<T>>? _loadingCompleter;
-
-  /// Returns itself after the save finishes.
-  @override
-  Future<LocalDocumentModel<T>> get saving =>
-      _savingCompleter?.future ?? Future.value(this);
-  Completer<LocalDocumentModel<T>>? _savingCompleter;
-
-  /// Returns itself after the delete finishes.
-  Future<void> get deleting => _deletingCompleter?.future ?? Future.value();
-  Completer<void>? _deletingCompleter;
+  Future<void> get future => _completer?.future ?? Future.value();
+  Completer<void>? _completer;
 
   /// Callback before the load has been done.
   @override
@@ -191,10 +180,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> load() async {
-    if (_loadingCompleter != null) {
-      return loading;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    _loadingCompleter = Completer<LocalDocumentModel<T>>();
+    _completer = Completer<void>();
     try {
       await _LocalDatabase.initialize();
       await onLoad();
@@ -202,11 +192,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
           _LocalDatabase._root._readFromPath<DynamicMap>(path) ?? {}));
       notifyListeners();
       await onDidLoad();
-      _loadingCompleter?.complete(this);
-      _loadingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _loadingCompleter?.completeError(e);
-      _loadingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
     return this;
   }
@@ -216,10 +206,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalDocumentModel<T>> save() async {
-    if (_savingCompleter != null) {
-      return saving;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    _savingCompleter = Completer<LocalDocumentModel<T>>();
+    _completer = Completer<void>();
     try {
       await _LocalDatabase.initialize();
       await onSave();
@@ -228,11 +219,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       _LocalDatabase._save();
       notifyListeners();
       await onDidSave();
-      _savingCompleter?.complete(this);
-      _savingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _savingCompleter?.completeError(e);
-      _savingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
     return this;
   }
@@ -261,10 +252,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
   ///
   /// Deleted documents are immediately reflected and removed from related collections, etc.
   Future<void> delete() async {
-    if (_deletingCompleter != null) {
-      return deleting;
+    if (_completer != null) {
+      await future;
+      return;
     }
-    _deletingCompleter = Completer<LocalDocumentModel<T>>();
+    _completer = Completer<void>();
     try {
       await _LocalDatabase.initialize();
       await onDelete();
@@ -273,11 +265,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       _LocalDatabase._save();
       notifyListeners();
       await onDidDelete();
-      _deletingCompleter?.complete();
-      _deletingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _deletingCompleter?.completeError(e);
-      _deletingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
   }
 

@@ -3,7 +3,8 @@ part of model_notifier;
 /// This is a mix-in that allows you to treat a model as a [List].
 ///
 /// It can be applied to any [ValueModel] that has a [List<T>].
-mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
+mixin ListModelMixin<T> on ValueModel<List<T>>
+    implements List<T>, ListenableList<T> {
   /// Discards any resources used by the object. After this is called, the
   /// object is not in a usable state and should be discarded (calls to
   /// [addListener] and [removeListener] will throw after the object is
@@ -16,6 +17,21 @@ mixin ListModelMixin<T> on ValueModel<List<T>> implements List<T> {
   void dispose() {
     super.dispose();
     super.value.clear();
+  }
+
+  /// Sends a notification to itself when the target [listenable] is updated.
+  @override
+  void dependOn(
+    Listenable listenable, [
+    List<T> Function(List<T> origin)? filter,
+  ]) {
+    listenable.addListener(() {
+      if (filter != null) {
+        value = filter.call(value);
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   /// If this value is `true`,

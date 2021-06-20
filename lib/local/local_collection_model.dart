@@ -101,16 +101,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// Parameters of the local database.
   final Map<String, String> parameters;
 
-  /// Returns itself after the load finishes.
+  /// Returns itself after the load/save finishes.
   @override
-  Future<LocalCollectionModel<T>> get loading =>
-      _loadingCompleter?.future ?? Future.value(this);
-  Completer<LocalCollectionModel<T>>? _loadingCompleter;
-
-  /// Returns itself after the save finishes.
-  @override
-  Future<LocalCollectionModel<T>> get saving => throw UnimplementedError(
-      "Save process should be done for each document.");
+  Future<void> get future => _completer?.future ?? Future.value();
+  Completer<void>? _completer;
 
   /// Callback before the load has been done.
   @override
@@ -174,10 +168,11 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<LocalCollectionModel<T>> load() async {
-    if (_loadingCompleter != null) {
-      return loading;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    _loadingCompleter = Completer<LocalCollectionModel<T>>();
+    _completer = Completer<void>();
     try {
       await _LocalDatabase.initialize();
       await onLoad();
@@ -207,11 +202,11 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         notifyListeners();
       }
       await onDidLoad();
-      _loadingCompleter?.complete(this);
-      _loadingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _loadingCompleter?.completeError(e);
-      _loadingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
     return this;
   }
@@ -281,6 +276,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     }
     if (found != document) {
       found.value = document.value;
+      found.notifyListeners();
     }
     // } else {
     //   if (CollectionQuery._filterValue(

@@ -41,17 +41,10 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   @protected
   final List<T> initialMock = const [];
 
-  /// Returns itself after the load finishes.
+  /// Returns itself after the load/save finishes.
   @override
-  Future<ApiCollectionModel<T>> get loading =>
-      _loadingCompleter?.future ?? Future.value(this);
-  Completer<ApiCollectionModel<T>>? _loadingCompleter;
-
-  /// Returns itself after the save finishes.
-  @override
-  Future<ApiCollectionModel<T>> get saving =>
-      _savingCompleter?.future ?? Future.value(this);
-  Completer<ApiCollectionModel<T>>? _savingCompleter;
+  Future<void> get future => _completer?.future ?? Future.value();
+  Completer<void>? _completer;
 
   /// If this value is `true`,
   /// Notify changes when there are changes in the list itself using list-specific methods.
@@ -208,20 +201,21 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// the updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiCollectionModel<T>> load() async {
-    if (_loadingCompleter != null) {
-      return loading;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    _loadingCompleter = Completer<ApiCollectionModel<T>>();
+    _completer = Completer<void>();
     try {
       await onLoad();
       await loadRequest();
       notifyListeners();
       await onDidLoad();
-      _loadingCompleter?.complete(this);
-      _loadingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _loadingCompleter?.completeError(e);
-      _loadingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
     return this;
   }
@@ -231,20 +225,21 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// The updated [Resuult] can be obtained at the stage where the loading is finished.
   @override
   Future<ApiCollectionModel<T>> save() async {
-    if (_savingCompleter != null) {
-      return saving;
+    if (_completer != null) {
+      await future;
+      return this;
     }
-    _savingCompleter = Completer<ApiCollectionModel<T>>();
+    _completer = Completer<void>();
     try {
       await onSave();
       await saveRequest();
       notifyListeners();
       await onDidSave();
-      _savingCompleter?.complete(this);
-      _savingCompleter = null;
+      _completer?.complete();
+      _completer = null;
     } finally {
-      _savingCompleter?.completeError(e);
-      _savingCompleter = null;
+      _completer?.completeError(e);
+      _completer = null;
     }
     return this;
   }

@@ -1,7 +1,8 @@
 part of model_notifier;
 
 /// Abstract class that defines methods for reading and writing data.
-abstract class StoredModel<T, Result extends Model<T>> extends Model<T> {
+abstract class StoredModel<T, Result extends Model<T>> extends Model<T>
+    implements FutureModel<T> {
   /// Retrieves data and updates the data in the model.
   ///
   /// You will be notified of model updates at the time they are retrieved.
@@ -33,12 +34,6 @@ abstract class StoredModel<T, Result extends Model<T>> extends Model<T> {
 
   /// Return `true` if data is not empty.
   bool get isNotEmpty;
-
-  /// Returns itself after the load finishes.
-  Future<Result> get loading;
-
-  /// Returns itself after the save finishes.
-  Future<Result> get saving;
 
   /// Callback before the load has been done.
   @protected

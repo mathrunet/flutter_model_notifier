@@ -3,7 +3,8 @@ part of model_notifier;
 /// A mix-in that allows you to use a model as a map.
 ///
 /// It can be applied to any [ValueModel] that has a [Map<K, V>].
-mixin MapModelMixin<K, V> on ValueModel<Map<K, V>> implements Map<K, V> {
+mixin MapModelMixin<K, V> on ValueModel<Map<K, V>>
+    implements Map<K, V>, ListenableMap<K, V> {
   /// Discards any resources used by the object. After this is called, the
   /// object is not in a usable state and should be discarded (calls to
   /// [addListener] and [removeListener] will throw after the object is
@@ -16,6 +17,21 @@ mixin MapModelMixin<K, V> on ValueModel<Map<K, V>> implements Map<K, V> {
   void dispose() {
     super.dispose();
     super.value.clear();
+  }
+
+  /// Sends a notification to itself when the target [listenable] is updated.
+  @override
+  void dependOn(
+    Listenable listenable, [
+    Map<K, V> Function(Map<K, V> origin)? filter,
+  ]) {
+    listenable.addListener(() {
+      if (filter != null) {
+        value = filter.call(value);
+      } else {
+        notifyListeners();
+      }
+    });
   }
 
   /// If this value is `true`,
