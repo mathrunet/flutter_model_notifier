@@ -57,15 +57,12 @@ class RuntimeDynamicDocumentModel extends RuntimeDocumentModel<DynamicMap>
   @override
   DynamicMap toMap(DynamicMap value) => value.cast<String, dynamic>();
 
-  /// Deletes the document.
-  ///
-  /// Deleted documents are immediately reflected and removed from related collections, etc.
+  /// Callback after the delete has been done.
   @override
-  Future<void> delete() async {
-    await onDelete();
-    _RuntimeDatabase._removeChild(this);
+  @protected
+  @mustCallSuper
+  Future<void> onDidDelete() async {
+    super.onDidDelete();
     clear();
-    notifyListeners();
-    await onDidDelete();
   }
 }

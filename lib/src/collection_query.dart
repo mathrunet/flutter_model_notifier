@@ -196,91 +196,91 @@ class CollectionQuery {
     return tmp;
   }
 
-  static DynamicMap? _filter(
-    Map<String, String> parameters,
-    DynamicMap? data,
-  ) {
-    if (data.isEmpty) {
-      return null;
-    }
-    if (parameters.isNotEmpty) {
-      data!.removeWhere((key, value) {
-        if (key.isEmpty || value is! DynamicMap) {
-          return true;
-        }
-        return _filterValue(parameters, value);
-      });
+  // static DynamicMap? _filter(
+  //   Map<String, String> parameters,
+  //   DynamicMap? data,
+  // ) {
+  //   if (data.isEmpty) {
+  //     return null;
+  //   }
+  //   if (parameters.isNotEmpty) {
+  //     data!.removeWhere((key, value) {
+  //       if (key.isEmpty || value is! DynamicMap) {
+  //         return true;
+  //       }
+  //       return _filterValue(parameters, value);
+  //     });
 
-      if (parameters.containsKey("orderByDesc")) {
-        final list = data.entries.toList();
-        final key = parameters["orderByDesc"].toString();
-        list.sort((am, bm) {
-          if (am.value is! DynamicMap || bm.value is! DynamicMap) {
-            return 0;
-          }
+  //     if (parameters.containsKey("orderByDesc")) {
+  //       final list = data.entries.toList();
+  //       final key = parameters["orderByDesc"].toString();
+  //       list.sort((am, bm) {
+  //         if (am.value is! DynamicMap || bm.value is! DynamicMap) {
+  //           return 0;
+  //         }
 
-          final a = am.value[key];
-          final b = bm.value[key];
-          if (a is String && b is String) {
-            b.compareTo(a);
-          } else if (a is num && b is num) {
-            final c = b - a;
-            if (c < 0) {
-              return -1;
-            } else if (c > 0) {
-              return 1;
-            }
-          }
-          return 0;
-        });
-        data = Map.fromEntries(list);
-      } else if (parameters.containsKey("orderByAsc")) {
-        final list = data.entries.toList();
-        final key = parameters["orderByAsc"].toString();
-        list.sort((am, bm) {
-          if (am.value is! DynamicMap || bm.value is! DynamicMap) {
-            return 0;
-          }
+  //         final a = am.value[key];
+  //         final b = bm.value[key];
+  //         if (a is String && b is String) {
+  //           b.compareTo(a);
+  //         } else if (a is num && b is num) {
+  //           final c = b - a;
+  //           if (c < 0) {
+  //             return -1;
+  //           } else if (c > 0) {
+  //             return 1;
+  //           }
+  //         }
+  //         return 0;
+  //       });
+  //       data = Map.fromEntries(list);
+  //     } else if (parameters.containsKey("orderByAsc")) {
+  //       final list = data.entries.toList();
+  //       final key = parameters["orderByAsc"].toString();
+  //       list.sort((am, bm) {
+  //         if (am.value is! DynamicMap || bm.value is! DynamicMap) {
+  //           return 0;
+  //         }
 
-          final a = am.value[key];
-          final b = bm.value[key];
-          if (a is String && b is String) {
-            a.compareTo(b);
-          } else if (a is num && b is num) {
-            final c = a - b;
-            if (c < 0) {
-              return -1;
-            } else if (c > 0) {
-              return 1;
-            }
-          }
-          return 0;
-        });
-        data = Map.fromEntries(list);
-      }
+  //         final a = am.value[key];
+  //         final b = bm.value[key];
+  //         if (a is String && b is String) {
+  //           a.compareTo(b);
+  //         } else if (a is num && b is num) {
+  //           final c = a - b;
+  //           if (c < 0) {
+  //             return -1;
+  //           } else if (c > 0) {
+  //             return 1;
+  //           }
+  //         }
+  //         return 0;
+  //       });
+  //       data = Map.fromEntries(list);
+  //     }
 
-      if (parameters.containsKey("limitToFirst")) {
-        final list = data.entries.toList();
-        data = Map.fromEntries(
-          list.sublist(
-            0,
-            int.parse(parameters["limitToFirst"] ?? "0").limitHigh(list.length),
-          ),
-        );
-      } else if (parameters.containsKey("limitToLast")) {
-        final list = data.entries.toList();
-        data = Map.fromEntries(
-          list.sublist(
-              (list.length - int.parse(parameters["limitToLast"] ?? "0"))
-                  .limitLow(0),
-              list.length),
-        );
-      }
-    }
-    return data;
-  }
+  //     if (parameters.containsKey("limitToFirst")) {
+  //       final list = data.entries.toList();
+  //       data = Map.fromEntries(
+  //         list.sublist(
+  //           0,
+  //           int.parse(parameters["limitToFirst"] ?? "0").limitHigh(list.length),
+  //         ),
+  //       );
+  //     } else if (parameters.containsKey("limitToLast")) {
+  //       final list = data.entries.toList();
+  //       data = Map.fromEntries(
+  //         list.sublist(
+  //             (list.length - int.parse(parameters["limitToLast"] ?? "0"))
+  //                 .limitLow(0),
+  //             list.length),
+  //       );
+  //     }
+  //   }
+  //   return data;
+  // }
 
-  static bool _filterValue(
+  static bool _filter(
     Map<String, String> parameters,
     DynamicMap? data,
   ) {

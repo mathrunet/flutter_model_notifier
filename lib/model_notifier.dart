@@ -47,6 +47,7 @@ part "src/document_mock_model.dart";
 part "src/collection_mock_model.dart";
 part "src/dynamic_document_model.dart";
 part "src/dynamic_collection_model.dart";
+part "src/local_store.dart";
 
 part "src/listenable_map.dart";
 part "src/listenable_list.dart";

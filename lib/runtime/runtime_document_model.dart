@@ -35,27 +35,6 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     super.value = newValue;
   }
 
-  /// Call all the registered listeners.
-  ///
-  /// Call this method whenever the object changes, to notify any clients the
-  /// object may have changed. Listeners that are added during this iteration
-  /// will not be visited. Listeners that are removed during this iteration will
-  /// not be visited after they are removed.
-  ///
-  /// Exceptions thrown by listeners will be caught and reported using
-  /// [FlutterError.reportError].
-  ///
-  /// This method must not be called after [dispose] has been called.
-  ///
-  /// Surprising behavior can result when reentrantly removing a listener (e.g.
-  /// in response to a notification) that has been registered multiple times.
-  /// See the discussion at [removeListener].
-  @override
-  void notifyListeners() {
-    _RuntimeDatabase._notifyChildChanges(this);
-    super.notifyListeners();
-  }
-
   /// Key for UID values.
   final String uidValueKey = Const.uid;
 
@@ -86,8 +65,10 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _RuntimeDatabase._removeDocument(this);
+    RuntimeDatabase._db.removeDocumentListener(_query);
   }
+
+  _LocalStoreDocumentQuery? _query;
 
   /// Initial value of mock.
   @override
@@ -184,9 +165,14 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     _completer = Completer<void>();
     try {
       await onLoad();
-      _RuntimeDatabase._addDocument(this);
-      value = fromMap(filterOnLoad(
-          _RuntimeDatabase._root._readFromPath<DynamicMap>(path) ?? {}));
+      _query ??= _LocalStoreDocumentQuery(
+        path: path,
+        callback: _handledOnUpdate,
+        origin: this,
+      );
+      RuntimeDatabase._db.addDocumentListener(_query!);
+      final data = await RuntimeDatabase._db.loadDocument(_query!);
+      value = fromMap(filterOnLoad(data ?? {}));
       notifyListeners();
       await onDidLoad();
       _completer?.complete();
@@ -196,6 +182,20 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
       _completer = null;
     }
     return this;
+  }
+
+  void _handledOnUpdate(_LocalStoreDocumentUpdate update) {
+    if (update.origin == this) {
+      return;
+    }
+    switch (update.status) {
+      case _LocalStoreDocumentUpdateStatus.deleted:
+        value = fromMap(filterOnLoad({}));
+        break;
+      default:
+        value = fromMap(filterOnLoad(update.value));
+        break;
+    }
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
@@ -210,11 +210,13 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     _completer = Completer<void>();
     try {
       await onSave();
-      _RuntimeDatabase._addDocument(this);
       final data = filterOnSave(toMap(value));
-      _RuntimeDatabase._root._writeToPath(path, data);
-      _RuntimeDatabase._syncDocument(this, data);
-      _RuntimeDatabase._addChild(this);
+      _query ??= _LocalStoreDocumentQuery(
+        path: path,
+        callback: _handledOnUpdate,
+        origin: this,
+      );
+      RuntimeDatabase._db.saveDocument(_query!, data);
       notifyListeners();
       await onDidSave();
       _completer?.complete();
@@ -257,10 +259,14 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
     _completer = Completer<void>();
     try {
       await onDelete();
-      _RuntimeDatabase._root._deleteFromPath(path);
-      _RuntimeDatabase._deleteDocument(this);
-      _RuntimeDatabase._removeChild(this);
+      _query ??= _LocalStoreDocumentQuery(
+        path: path,
+        callback: _handledOnUpdate,
+        origin: this,
+      );
       value = fromMap(filterOnLoad(const {}));
+      RuntimeDatabase._db.deleteDocument(_query!);
+      notifyListeners();
       await onDidDelete();
       _completer?.complete();
       _completer = null;

@@ -58,8 +58,10 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _RuntimeDatabase._removeCollection(this);
+    RuntimeDatabase._db.removeCollectionListener(_query);
   }
+
+  _LocalStoreCollectionQuery? _query;
 
   /// Initial value of mock.
   @override
@@ -168,11 +170,16 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
     try {
       await onLoad();
       bool notify = false;
-      _RuntimeDatabase._addCollection(this);
-      final data = CollectionQuery._filter(
-        parameters,
-        _RuntimeDatabase._root._readFromPath<DynamicMap?>(path),
+      _query ??= _LocalStoreCollectionQuery(
+        path: path,
+        callback: _handledOnUpdate,
+        filter: parameters.isEmpty
+            ? null
+            : (data) => CollectionQuery._filter(parameters, data),
+        origin: this,
       );
+      RuntimeDatabase._db.addCollectionListener(_query!);
+      final data = await RuntimeDatabase._db.loadCollection(_query!);
       if (isNotEmpty) {
         clear();
         notify = true;
@@ -185,7 +192,6 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
             continue;
           }
           final value = createDocument("${path.trimQuery()}/${tmp.key}");
-          _RuntimeDatabase._addDocument(value);
           value.value = value.fromMap(value.filterOnLoad(tmp.value));
           addData.add(value);
         }
@@ -202,6 +208,29 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
       _completer = null;
     }
     return this;
+  }
+
+  void _handledOnUpdate(_LocalStoreDocumentUpdate update) {
+    switch (update.status) {
+      case _LocalStoreDocumentUpdateStatus.deleted:
+        removeWhere((element) =>
+            element.path.trimQuery().trimString("/") == update.path);
+        break;
+      default:
+        final found = firstWhereOrNull((element) =>
+            element.path.trimQuery().trimString("/") == update.path);
+        if (found != null) {
+          if (found == update.origin) {
+            return;
+          }
+          found.value = found.fromMap(found.filterOnLoad(update.value));
+        } else {
+          final value = createDocument("${path.trimQuery()}/${update.id}");
+          value.value = value.fromMap(value.filterOnLoad(update.value));
+          add(value);
+        }
+        break;
+    }
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
@@ -234,55 +263,5 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
       return load();
     }
     return this;
-  }
-
-  void _addChildInternal(T document) {
-    if (any((e) => e == document || e.path == document.path)) {
-      return;
-    }
-    if (!CollectionQuery._filterValue(
-      parameters,
-      document.toMap(document.value),
-    )) {
-      return;
-    }
-    add(document);
-    notifyListeners();
-  }
-
-  void _removeChildInternal(T document) {
-    if (!any((e) => e == document || e.path == document.path)) {
-      return;
-    }
-    removeWhere((e) => e == document || e.path == document.path);
-    notifyListeners();
-  }
-
-  void _notifyChildChanges(T document) {
-    final found =
-        firstWhereOrNull((e) => e == document || e.path == document.path);
-    if (found == null) {
-      return;
-    }
-    if (!CollectionQuery._filterValue(parameters, found.toMap(found.value))) {
-      removeWhere((e) => e == found || e.path == found.path);
-      notifyListeners();
-      return;
-    }
-    if (found != document) {
-      found.value = document.value;
-      found.notifyListeners();
-    }
-    // } else {
-    //   if (CollectionQuery._filterValue(
-    //       parameters, document.toMap(document.value))) {
-    //     add(document);
-    //     notifyListeners();
-    //     return;
-    //   }
-    if (!notifyOnModified) {
-      return;
-    }
-    notifyListeners();
   }
 }

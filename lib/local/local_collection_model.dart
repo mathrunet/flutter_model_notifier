@@ -30,9 +30,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
             "The path hierarchy must be an odd number."),
         path = path.trimQuery(),
         parameters = _getParameters(path),
-        super(value ?? []) {
-    _LocalDatabase._registerParent(this);
-  }
+        super(value ?? []);
 
   static Map<String, String> _getParameters(String path) {
     if (path.contains("?")) {
@@ -92,8 +90,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   @mustCallSuper
   void dispose() {
     super.dispose();
-    _LocalDatabase._unregisterParent(this);
+    LocalDatabase._db.removeCollectionListener(_query);
   }
+
+  _LocalStoreCollectionQuery? _query;
 
   /// Path of the local database.
   final String path;
@@ -174,13 +174,18 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     }
     _completer = Completer<void>();
     try {
-      await _LocalDatabase.initialize();
       await onLoad();
       bool notify = false;
-      final data = CollectionQuery._filter(
-        parameters,
-        _LocalDatabase._root._readFromPath<DynamicMap?>(path),
+      _query ??= _LocalStoreCollectionQuery(
+        path: path,
+        callback: _handledOnUpdate,
+        filter: parameters.isEmpty
+            ? null
+            : (data) => CollectionQuery._filter(parameters, data),
+        origin: this,
       );
+      LocalDatabase._db.addCollectionListener(_query!);
+      final data = await LocalDatabase._db.loadCollection(_query!);
       if (isNotEmpty) {
         clear();
         notify = true;
@@ -209,6 +214,29 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       _completer = null;
     }
     return this;
+  }
+
+  void _handledOnUpdate(_LocalStoreDocumentUpdate update) {
+    switch (update.status) {
+      case _LocalStoreDocumentUpdateStatus.deleted:
+        removeWhere((element) =>
+            element.path.trimQuery().trimString("/") == update.path);
+        break;
+      default:
+        final found = firstWhereOrNull((element) =>
+            element.path.trimQuery().trimString("/") == update.path);
+        if (found != null) {
+          if (found == update.origin) {
+            return;
+          }
+          found.value = found.fromMap(found.filterOnLoad(update.value));
+        } else {
+          final value = createDocument("${path.trimQuery()}/${update.id}");
+          value.value = value.fromMap(value.filterOnLoad(update.value));
+          add(value);
+        }
+        break;
+    }
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
@@ -241,53 +269,5 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       return load();
     }
     return this;
-  }
-
-  void _addChildInternal(T document) {
-    if (any((e) => e == document || e.path == document.path)) {
-      return;
-    }
-    if (!CollectionQuery._filterValue(
-        parameters, document.toMap(document.value))) {
-      return;
-    }
-    add(document);
-    notifyListeners();
-  }
-
-  void _removeChildInternal(T document) {
-    if (!any((e) => e == document || e.path == document.path)) {
-      return;
-    }
-    removeWhere((e) => e == document || e.path == document.path);
-    notifyListeners();
-  }
-
-  void _notifyChildChanges(T document) {
-    final found =
-        firstWhereOrNull((e) => e == document || e.path == document.path);
-    if (found == null) {
-      return;
-    }
-    if (!CollectionQuery._filterValue(parameters, found.toMap(found.value))) {
-      remove(found);
-      notifyListeners();
-      return;
-    }
-    if (found != document) {
-      found.value = document.value;
-      found.notifyListeners();
-    }
-    // } else {
-    //   if (CollectionQuery._filterValue(
-    //       parameters, document.toMap(document.value))) {
-    //     add(document);
-    //     notifyListeners();
-    //     return;
-    //   }
-    if (!notifyOnModified) {
-      return;
-    }
-    notifyListeners();
   }
 }
