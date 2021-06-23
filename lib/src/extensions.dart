@@ -59,20 +59,18 @@ extension ListenableMapExtensions<K, V> on ValueListenable<Map<K, V>> {
     V Function(V value)? convertValues,
   }) {
     final filter = (Map<K, V> origin) {
-      if (origin.isNotEmpty) {
-        origin.clear();
-      }
+      final res = <K, V>{};
       for (final tmp in value.entries) {
-        origin[tmp.key] = tmp.value;
+        res[tmp.key] = tmp.value;
       }
       for (final tmp in others.value.entries) {
         final key = convertKeys?.call(tmp.key) ?? tmp.key;
         final value = convertValues?.call(tmp.value) ?? tmp.value;
-        origin[key] = value;
+        res[key] = value;
       }
-      return origin;
+      return res;
     };
-    return ListenableMap<K, V>.from(filter(<K, V>{}))
+    return ListenableMap<K, V>.from(filter(const {}))
       ..dependOn(this, filter)
       ..dependOn(others, filter);
   }

@@ -196,90 +196,6 @@ class CollectionQuery {
     return tmp;
   }
 
-  // static DynamicMap? _filter(
-  //   Map<String, String> parameters,
-  //   DynamicMap? data,
-  // ) {
-  //   if (data.isEmpty) {
-  //     return null;
-  //   }
-  //   if (parameters.isNotEmpty) {
-  //     data!.removeWhere((key, value) {
-  //       if (key.isEmpty || value is! DynamicMap) {
-  //         return true;
-  //       }
-  //       return _filterValue(parameters, value);
-  //     });
-
-  //     if (parameters.containsKey("orderByDesc")) {
-  //       final list = data.entries.toList();
-  //       final key = parameters["orderByDesc"].toString();
-  //       list.sort((am, bm) {
-  //         if (am.value is! DynamicMap || bm.value is! DynamicMap) {
-  //           return 0;
-  //         }
-
-  //         final a = am.value[key];
-  //         final b = bm.value[key];
-  //         if (a is String && b is String) {
-  //           b.compareTo(a);
-  //         } else if (a is num && b is num) {
-  //           final c = b - a;
-  //           if (c < 0) {
-  //             return -1;
-  //           } else if (c > 0) {
-  //             return 1;
-  //           }
-  //         }
-  //         return 0;
-  //       });
-  //       data = Map.fromEntries(list);
-  //     } else if (parameters.containsKey("orderByAsc")) {
-  //       final list = data.entries.toList();
-  //       final key = parameters["orderByAsc"].toString();
-  //       list.sort((am, bm) {
-  //         if (am.value is! DynamicMap || bm.value is! DynamicMap) {
-  //           return 0;
-  //         }
-
-  //         final a = am.value[key];
-  //         final b = bm.value[key];
-  //         if (a is String && b is String) {
-  //           a.compareTo(b);
-  //         } else if (a is num && b is num) {
-  //           final c = a - b;
-  //           if (c < 0) {
-  //             return -1;
-  //           } else if (c > 0) {
-  //             return 1;
-  //           }
-  //         }
-  //         return 0;
-  //       });
-  //       data = Map.fromEntries(list);
-  //     }
-
-  //     if (parameters.containsKey("limitToFirst")) {
-  //       final list = data.entries.toList();
-  //       data = Map.fromEntries(
-  //         list.sublist(
-  //           0,
-  //           int.parse(parameters["limitToFirst"] ?? "0").limitHigh(list.length),
-  //         ),
-  //       );
-  //     } else if (parameters.containsKey("limitToLast")) {
-  //       final list = data.entries.toList();
-  //       data = Map.fromEntries(
-  //         list.sublist(
-  //             (list.length - int.parse(parameters["limitToLast"] ?? "0"))
-  //                 .limitLow(0),
-  //             list.length),
-  //       );
-  //     }
-  //   }
-  //   return data;
-  // }
-
   static bool _filter(
     Map<String, String> parameters,
     DynamicMap? data,
@@ -342,6 +258,49 @@ class CollectionQuery {
     }
     return true;
   }
+
+  /// Convert the collection query from [DynamicMap].
+  static CollectionQuery? _fromMap(DynamicMap map) {
+    if (map.isEmpty || !map.containsKey("path")) {
+      return null;
+    }
+
+    return CollectionQuery(
+      map.get("path", ""),
+      key: map.get<String?>("key", null),
+      isEqualTo: map.get<dynamic>("equalTo", null),
+      isNotEqualTo: map.get<dynamic>("notEqualTo", null),
+      isLessThanOrEqualTo: map.get<dynamic>("endAt", null),
+      isGreaterThanOrEqualTo: map.get<dynamic>("startAt", null),
+      arrayContains: map.get<dynamic>("contains", null),
+      arrayContainsAny: map.get<List?>("containsAny", null),
+      whereIn: map.get<List?>("whereIn", null),
+      whereNotIn: map.get<List?>("whereNotIn", null),
+      order: CollectionQueryOrder.values.firstWhere(
+          (e) => e.index == map.get("order", CollectionQueryOrder.asc.index)),
+      limit: map.get<int?>("limit", null),
+      orderBy: map.get<String?>("orderBy", null),
+    );
+  }
+
+  /// Convert the collection query to [DynamicMap].
+  DynamicMap toMap() {
+    return <String, dynamic>{
+      "path": path,
+      if (key.isNotEmpty) "key": key,
+      if (isEqualTo != null) "equalTo": isEqualTo,
+      if (isNotEqualTo != null) "notEqualTo": isNotEqualTo,
+      if (isLessThanOrEqualTo != null) "endAt": isLessThanOrEqualTo,
+      if (isGreaterThanOrEqualTo != null) "startAt": isGreaterThanOrEqualTo,
+      if (arrayContains != null) "contains": arrayContains,
+      if (arrayContainsAny.isNotEmpty) "containsAny": arrayContainsAny,
+      if (whereIn.isNotEmpty) "whereIn": whereIn,
+      if (whereNotIn.isNotEmpty) "whereNotIn": whereNotIn,
+      "order": order.index,
+      if (limit != null) "limit": limit,
+      if (orderBy.isNotEmpty) "orderBy": orderBy,
+    };
+  }
 }
 
 /// Specifies the order in which queries are ordered.
@@ -351,4 +310,11 @@ enum CollectionQueryOrder {
 
   /// Descending order.
   desc,
+}
+
+extension CollectionQueryDynamicMapExtensions on DynamicMap {
+  /// Convert the collection query from [DynamicMap].
+  CollectionQuery? toCollectionQuery() {
+    return CollectionQuery._fromMap(this);
+  }
 }

@@ -24,7 +24,11 @@ class _LocalStore {
   void addDocumentListener(_LocalStoreDocumentQuery query) {
     final trimPath = query.path.trimQuery().trimString("/");
     if (_documentListeners.containsKey(trimPath)) {
-      _documentListeners[trimPath]!.add(query);
+      final listener = _documentListeners[trimPath]!;
+      if (listener.contains(query)) {
+        return;
+      }
+      listener.add(query);
     } else {
       _documentListeners[trimPath] = {query};
     }
@@ -43,7 +47,11 @@ class _LocalStore {
   void addCollectionListener(_LocalStoreCollectionQuery query) {
     final trimPath = query.path.trimQuery().trimString("/");
     if (_collectionListeners.containsKey(trimPath)) {
-      _collectionListeners[trimPath]!.add(query);
+      final listener = _collectionListeners[trimPath]!;
+      if (listener.contains(query)) {
+        return;
+      }
+      listener.add(query);
     } else {
       _collectionListeners[trimPath] = {query};
     }
@@ -68,10 +76,10 @@ class _LocalStore {
       return null;
     }
     final value = _data._readFromPath(paths, 0);
-    if (value is! DynamicMap) {
+    if (value is! Map) {
       return null;
     }
-    return Map.from(value);
+    return Map<String, dynamic>.from(value);
   }
 
   Future<Map<String, DynamicMap>?> loadCollection(
@@ -84,17 +92,20 @@ class _LocalStore {
       return null;
     }
     final value = _data._readFromPath(paths, 0);
-    if (value is! Map<String, DynamicMap>) {
+    if (value is! DynamicMap) {
       return null;
     }
-    final entries = value
-        .toList(
-          (key, value) => MapEntry(
-            key,
-            Map<String, dynamic>.from(value),
-          ),
-        )
-        .toList();
+    final entries = value.toList(
+      (key, value) {
+        if (value is! Map) {
+          return null;
+        }
+        return MapEntry(
+          key,
+          Map<String, dynamic>.from(value),
+        );
+      },
+    ).removeEmpty();
     if (query.filter != null) {
       entries.removeWhere((element) => !query.filter!(element.value));
     }
@@ -109,7 +120,7 @@ class _LocalStore {
     if (paths.isEmpty) {
       return;
     }
-    _data._writeToPath(paths, 0, value);
+    _data._writeToPath(paths, 0, Map.from(value));
   }
 
   Future<void> saveDocument(
@@ -233,48 +244,54 @@ class _LocalStoreCollectionQuery {
   final bool Function(DynamicMap update)? filter;
 }
 
-extension _LocalStoreDynamicMapExtensions on DynamicMap {
+extension _LocalStoreDynamicMapExtensions on Map {
   dynamic _readFromPath(List<String> paths, int index) {
     if (paths.length <= index) {
       return this;
     }
     final p = paths[index];
-    if (p.isEmpty || !containsKey(p)) {
+    if (p.isEmpty) {
       return null;
     }
-    if (this[p] is DynamicMap)
-      return (this[p] as DynamicMap)._readFromPath(paths, index + 1);
-    return this[p];
+    final val = this[p];
+    if (val is Map) {
+      return val._readFromPath(paths, index + 1);
+    }
+    return val;
   }
 
   void _writeToPath(List<String> paths, int index, dynamic value) {
-    if (paths.length - 1 <= index) {
-      remove(paths[index]);
-      this[paths[index]] = value;
-      return;
-    }
     final p = paths[index];
     if (p.isEmpty) {
       return;
     }
-    if (!containsKey(p) || this[p] == null || this[p] is! DynamicMap) {
-      this[p] = <String, dynamic>{};
+    if (paths.length - 1 <= index) {
+      remove(p);
+      this[p] = value;
+      return;
     }
-    (this[p] as DynamicMap)._writeToPath(paths, index + 1, value);
+    final val = this[p];
+    if (val is! Map) {
+      final val = this[p] = <String, dynamic>{};
+      val._writeToPath(paths, index + 1, value);
+    } else {
+      val._writeToPath(paths, index + 1, value);
+    }
   }
 
   void _deleteFromPath(List<String> paths, int index) {
-    if (paths.length - 1 <= index) {
-      remove(paths[index]);
-      return;
-    }
     final p = paths[index];
     if (p.isEmpty) {
       return;
     }
-    if (!containsKey(p) || this[p] == null || this[p] is! DynamicMap) {
+    if (paths.length - 1 <= index) {
+      remove(p);
       return;
     }
-    (this[p] as DynamicMap)._deleteFromPath(paths, index + 1);
+    final val = this[p];
+    if (val is! Map) {
+      return;
+    }
+    val._deleteFromPath(paths, index + 1);
   }
 }
