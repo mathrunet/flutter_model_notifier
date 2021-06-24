@@ -46,6 +46,10 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   Future<void> get future => _completer?.future ?? Future.value();
   Completer<void>? _completer;
 
+  /// It becomes `true` after [loadOnce] is executed.
+  @override
+  bool loaded = false;
+
   /// If this value is `true`,
   /// Notify changes when there are changes in the list itself using list-specific methods.
   @override
@@ -262,7 +266,8 @@ abstract class ApiCollectionModel<T> extends ValueModel<List<T>>
   /// Use [isEmpty] to determine whether the file is empty or not.
   @override
   Future<ApiCollectionModel<T>> loadOnce() async {
-    if (isEmpty) {
+    if (!loaded) {
+      loaded = true;
       return load();
     }
     return this;

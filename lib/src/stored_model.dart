@@ -29,6 +29,9 @@ abstract class StoredModel<T, Result extends Model<T>> extends Model<T>
   /// Use [isEmpty] to determine whether the file is empty or not.
   Future<Result> loadOnce();
 
+  /// It becomes `true` after [loadOnce] is executed.
+  bool get loaded;
+
   /// Return `true` if data is empty.
   bool get isEmpty;
 

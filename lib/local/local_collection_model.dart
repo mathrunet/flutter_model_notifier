@@ -106,6 +106,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   Future<void> get future => _completer?.future ?? Future.value();
   Completer<void>? _completer;
 
+  /// It becomes `true` after [loadOnce] is executed.
+  @override
+  bool loaded = false;
+
   /// Callback before the load has been done.
   @override
   @protected
@@ -219,24 +223,60 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   void _handledOnUpdate(_LocalStoreDocumentUpdate update) {
     switch (update.status) {
       case _LocalStoreDocumentUpdateStatus.deleted:
-        removeWhere((element) =>
-            element.path.trimQuery().trimString("/") == update.path);
+        _deleteOnUpdate(update);
         break;
       default:
         final found = firstWhereOrNull((element) =>
             element.path.trimQuery().trimString("/") == update.path);
         if (found != null) {
-          if (found == update.origin) {
-            return;
+          if (_query?.filter != null) {
+            if (_query!.filter!.call(update.value)) {
+              _modifyOnUpdate(found, update);
+            } else {
+              _deleteOnUpdate(update);
+            }
+          } else {
+            _modifyOnUpdate(found, update);
           }
-          found.value = found.fromMap(found.filterOnLoad(update.value));
         } else {
-          final value = createDocument("${path.trimQuery()}/${update.id}");
-          value.value = value.fromMap(value.filterOnLoad(update.value));
-          add(value);
+          if (_query?.filter != null) {
+            if (_query!.filter!.call(update.value)) {
+              _addOnUpdate(update);
+            }
+          } else {
+            _addOnUpdate(update);
+          }
         }
         break;
     }
+  }
+
+  void _deleteOnUpdate(_LocalStoreDocumentUpdate update) {
+    bool notify = false;
+    removeWhere((element) {
+      final remove = element.path.trimQuery().trimString("/") == update.path;
+      if (remove) {
+        notify = true;
+      }
+      return remove;
+    });
+    if (notify) {
+      notifyListeners();
+    }
+  }
+
+  void _modifyOnUpdate(T found, _LocalStoreDocumentUpdate update) {
+    if (found == update.origin) {
+      return;
+    }
+    found.value = found.fromMap(found.filterOnLoad(update.value));
+  }
+
+  void _addOnUpdate(_LocalStoreDocumentUpdate update) {
+    final value = createDocument("${path.trimQuery()}/${update.id}");
+    value.value = value.fromMap(value.filterOnLoad(update.value));
+    add(value);
+    notifyListeners();
   }
 
   /// Data stored in the model is stored in a database external to the app that is tied to the model.
@@ -265,7 +305,8 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   /// Use [isEmpty] to determine whether the file is empty or not.
   @override
   Future<LocalCollectionModel<T>> loadOnce() async {
-    if (isEmpty) {
+    if (!loaded) {
+      loaded = true;
       return load();
     }
     return this;

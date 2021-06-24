@@ -67,6 +67,10 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   Future<void> get future => _completer?.future ?? Future.value();
   Completer<void>? _completer;
 
+  /// It becomes `true` after [loadOnce] is executed.
+  @override
+  bool loaded = false;
+
   /// Callback before the load has been done.
   @override
   @protected
@@ -226,7 +230,8 @@ abstract class ApiDocumentModel<T> extends DocumentModel<T>
   /// Use [isEmpty] to determine whether the file is empty or not.
   @override
   Future<ApiDocumentModel<T>> loadOnce() async {
-    if (isEmpty) {
+    if (!loaded) {
+      loaded = true;
       return load();
     }
     return this;

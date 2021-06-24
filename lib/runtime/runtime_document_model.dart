@@ -83,6 +83,10 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   Future<void> get future => _completer?.future ?? Future.value();
   Completer<void>? _completer;
 
+  /// It becomes `true` after [loadOnce] is executed.
+  @override
+  bool loaded = false;
+
   /// Returns itself after the delete finishes.
   Future<void> get deleting => Future.value();
 
@@ -242,7 +246,8 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
   /// Use [isEmpty] to determine whether the file is empty or not.
   @override
   Future<RuntimeDocumentModel<T>> loadOnce() async {
-    if (isEmpty) {
+    if (!loaded) {
+      loaded = true;
       return load();
     }
     return this;
