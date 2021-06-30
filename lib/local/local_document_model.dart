@@ -86,7 +86,7 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
 
   /// Returns itself after the load/save finishes.
   @override
-  Future<void> get future => _completer?.future ?? Future.value();
+  Future<void>? get future => _completer?.future;
   Completer<void>? _completer;
 
   /// It becomes `true` after [loadOnce] is executed.
@@ -183,8 +183,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidLoad();
       _completer?.complete();
       _completer = null;
-    } finally {
+    } catch (e) {
       _completer?.completeError(e);
+      _completer = null;
+    } finally {
+      _completer?.complete();
       _completer = null;
     }
     return this;
@@ -227,8 +230,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidSave();
       _completer?.complete();
       _completer = null;
-    } finally {
+    } catch (e) {
       _completer?.completeError(e);
+      _completer = null;
+    } finally {
+      _completer?.complete();
       _completer = null;
     }
     return this;
@@ -277,8 +283,11 @@ abstract class LocalDocumentModel<T> extends DocumentModel<T>
       await onDidDelete();
       _completer?.complete();
       _completer = null;
-    } finally {
+    } catch (e) {
       _completer?.completeError(e);
+      _completer = null;
+    } finally {
+      _completer?.complete();
       _completer = null;
     }
   }

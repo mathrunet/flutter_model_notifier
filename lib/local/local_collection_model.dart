@@ -103,7 +103,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
 
   /// Returns itself after the load/save finishes.
   @override
-  Future<void> get future => _completer?.future ?? Future.value();
+  Future<void>? get future => _completer?.future;
   Completer<void>? _completer;
 
   /// It becomes `true` after [loadOnce] is executed.
@@ -213,8 +213,11 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
       await onDidLoad();
       _completer?.complete();
       _completer = null;
-    } finally {
+    } catch (e) {
       _completer?.completeError(e);
+      _completer = null;
+    } finally {
+      _completer?.complete();
       _completer = null;
     }
     return this;

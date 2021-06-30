@@ -53,7 +53,7 @@ part "src/listenable_map.dart";
 part "src/listenable_list.dart";
 part "src/map_model_mixin.dart";
 part "src/list_model_mixin.dart";
-part "src/change_notifier_listener.dart";
+part 'src/listenable_listener.dart';
 
 part "src/document_model.dart";
 

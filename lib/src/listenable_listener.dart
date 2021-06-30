@@ -7,15 +7,15 @@ class ListenableListener<T extends Listenable> extends StatefulWidget {
   /// rebuilds the widgets inside when there is an update.
   const ListenableListener({
     Key? key,
-    required this.notifier,
+    required this.listenable,
     required this.builder,
   }) : super(key: key);
 
   /// Listenable to monitor.
-  final T notifier;
+  final T listenable;
 
   /// Widget builder to update.
-  final Widget Function(BuildContext context, T notifier) builder;
+  final Widget Function(BuildContext context, T listenable) builder;
 
   /// Creates the mutable state for this widget at a given location in the tree.
   ///
@@ -44,21 +44,21 @@ class _ListenableListenerState<T extends Listenable>
   @override
   void initState() {
     super.initState();
-    widget.notifier.addListener(_handledOnUpdate);
+    widget.listenable.addListener(_handledOnUpdate);
   }
 
   @override
   void dispose() {
     super.dispose();
-    widget.notifier.removeListener(_handledOnUpdate);
+    widget.listenable.removeListener(_handledOnUpdate);
   }
 
   @override
   void didUpdateWidget(ListenableListener<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.notifier != oldWidget.notifier) {
-      oldWidget.notifier.removeListener(_handledOnUpdate);
-      widget.notifier.addListener(_handledOnUpdate);
+    if (widget.listenable != oldWidget.listenable) {
+      oldWidget.listenable.removeListener(_handledOnUpdate);
+      widget.listenable.addListener(_handledOnUpdate);
     }
   }
 
@@ -68,6 +68,6 @@ class _ListenableListenerState<T extends Listenable>
 
   @override
   Widget build(BuildContext context) {
-    return widget.builder(context, widget.notifier);
+    return widget.builder(context, widget.listenable);
   }
 }

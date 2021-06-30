@@ -128,21 +128,21 @@ class CollectionQuery {
   /// Limit the number to be acquired.
   final int? limit;
 
-  String _limit(String path) {
+  String _limit([String path = ""]) {
     if (limit == null) {
       return path;
     }
     return "$path&limitToFirst=$limit";
   }
 
-  String _order(String path) {
-    if (orderBy.isEmpty) {
+  String _order([String path = ""]) {
+    if (orderBy.isEmpty && key.isEmpty) {
       return path;
     }
     if (order == CollectionQueryOrder.asc) {
-      return "$path&orderByAsc=$orderBy";
+      return "$path&orderByAsc=${orderBy.isEmpty ? key : orderBy}";
     } else {
-      return "$path&orderByDesc=$orderBy";
+      return "$path&orderByDesc=${orderBy.isEmpty ? key : orderBy}";
     }
   }
 
@@ -170,30 +170,41 @@ class CollectionQuery {
       "If you want to specify a condition, please specify [key].",
     );
     if (key.isEmpty) {
-      return path;
+      final parameters = _limit(_order()).trimString("&");
+      if (parameters.isEmpty) {
+        return path;
+      } else {
+        return "$path?$parameters";
+      }
     }
-    final tmp = "$path?key=$key";
+    final tmp = "key=$key";
     if (isEqualTo != null) {
-      return _limit(_order("$tmp&equalTo=$isEqualTo"));
+      return "$path?${_limit(_order("$tmp&equalTo=$isEqualTo")).trimString("&")}";
     } else if (isNotEqualTo != null) {
-      return _limit(_order("$tmp&notEqualTo=$isNotEqualTo"));
+      return "$path?${_limit(_order("$tmp&notEqualTo=$isNotEqualTo")).trimString("&")}";
     } else if (isLessThanOrEqualTo != null) {
-      return _limit(_order("$tmp&endAt=$isLessThanOrEqualTo"));
+      return "$path?${_limit(_order("$tmp&endAt=$isLessThanOrEqualTo")).trimString("&")}";
     } else if (isGreaterThanOrEqualTo != null) {
-      return _limit(_order("$tmp&startAt=$isGreaterThanOrEqualTo"));
+      return "$path?${_limit(_order("$tmp&startAt=$isGreaterThanOrEqualTo")).trimString("&")}";
     } else if (arrayContains != null) {
-      return _limit(_order("$tmp&contains=$arrayContains"));
+      return "$path?${_limit(_order("$tmp&contains=$arrayContains")).trimString("&")}";
     } else if (arrayContainsAny != null) {
-      return _limit(_order(
-          "$tmp&containsAny=${arrayContainsAny!.map((e) => e.toString()).join(",")}"));
+      return "$path?" +
+          _limit(_order(
+                  "$tmp&containsAny=${arrayContainsAny!.map((e) => e.toString()).join(",")}"))
+              .trimString("&");
     } else if (whereIn != null) {
-      return _limit(_order(
-          "$tmp&whereIn=${whereIn!.map((e) => e.toString()).join(",")}"));
+      return "$path?" +
+          _limit(_order(
+                  "$tmp&whereIn=${whereIn!.map((e) => e.toString()).join(",")}"))
+              .trimString("&");
     } else if (whereNotIn != null) {
-      return _limit(_order(
-          "$tmp&whereNotIn=${whereNotIn!.map((e) => e.toString()).join(",")}"));
+      return "$path?" +
+          _limit(_order(
+                  "$tmp&whereNotIn=${whereNotIn!.map((e) => e.toString()).join(",")}"))
+              .trimString("&");
     }
-    return tmp;
+    return "$path?${tmp.trimString("&")}";
   }
 
   static bool _filter(

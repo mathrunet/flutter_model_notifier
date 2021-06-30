@@ -12,9 +12,9 @@ extension ListenableListExtensions<T extends Listenable> on Iterable<T> {
   List<Widget> mapListenable(Widget? Function(T item) callback) {
     return map((item) {
       return ListenableListener<T>(
-        notifier: item,
-        builder: (context, notifier) =>
-            callback.call(notifier) ?? const SizedBox(),
+        listenable: item,
+        builder: (context, listenable) =>
+            callback.call(listenable) ?? const SizedBox(),
       );
     }).toList();
   }
@@ -94,5 +94,37 @@ extension AsyncValueExtensions<T> on AsyncValue<T> {
   /// If it is itself null or the value is null, [defaultValue] is returned.
   T value(T defaultValue) {
     return data?.value ?? defaultValue;
+  }
+}
+
+extension MasamuneDynamicMapExtensions on DynamicMap {
+  /// Get the uid.
+  ///
+  /// Same process as below.
+  /// ```
+  /// this.get(Const.uid, "");
+  /// ```
+  String get uid {
+    return this.get(Const.uid, "");
+  }
+
+  /// Get the time.
+  ///
+  /// Same process as below.
+  /// ```
+  /// this.get(Const.time, DateTime.now().millisecondsSinceEpoch);
+  /// ```
+  int get time {
+    return this.get(Const.time, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  /// Get the locale.
+  ///
+  /// Same process as below.
+  /// ```
+  /// this.get(MetaConst.locale, Localize.locale);
+  /// ```
+  String get locale {
+    return this.get(MetaConst.locale, Localize.locale);
   }
 }
