@@ -214,44 +214,47 @@ class CollectionQuery {
     if (data.isEmpty) {
       return false;
     }
-    if (!parameters.containsKey("key")) {
+    if (!parameters.containsKey("key") || parameters["key"].isEmpty) {
       return true;
     }
     final key = parameters["key"]!;
     if (!data.containsKey(key)) {
       return false;
     }
-    if (parameters.containsKey("equalTo")) {
+    if (parameters.containsKey("equalTo") && parameters["equalTo"].isNotEmpty) {
       return data![key] == parameters["equalTo"].toAny();
     }
-    if (parameters.containsKey("notEqualTo")) {
+    if (parameters.containsKey("notEqualTo") &&
+        parameters["noteEqualTo"].isNotEmpty) {
       return data![key] != parameters["noteEqualTo"].toAny();
     }
-    if (parameters.containsKey("startAt")) {
+    if (parameters.containsKey("startAt") && parameters["startAt"].isNotEmpty) {
       return data![key] >= parameters["startAt"].toAny();
     }
-    if (parameters.containsKey("endAt")) {
+    if (parameters.containsKey("endAt") && parameters["endAt"].isNotEmpty) {
       return data![key] <= parameters["endAt"].toAny();
     }
-    if (parameters.containsKey("contains")) {
+    if (parameters.containsKey("contains") &&
+        parameters["contains"].isNotEmpty) {
       final list = data![key];
       if (list is! List) {
         return false;
       }
       return list.contains(parameters["contains"].toAny());
     }
-    if (parameters.containsKey("containsAny")) {
+    if (parameters.containsKey("containsAny") &&
+        parameters["containsAny"].isNotEmpty) {
       final list = data![key];
       if (list is! List) {
         return false;
       }
-      final any = parameters["contains"]
+      final any = parameters["containsAny"]
           .toString()
           .split(",")
           .mapAndRemoveEmpty((item) => item.toAny());
       return list.any((e) => e == any);
     }
-    if (parameters.containsKey("whereIn")) {
+    if (parameters.containsKey("whereIn") && parameters["whereIn"].isNotEmpty) {
       final val = data![key];
       final any = parameters["whereIn"]
           .toString()
@@ -259,7 +262,8 @@ class CollectionQuery {
           .mapAndRemoveEmpty((item) => item.toAny());
       return any.contains(val);
     }
-    if (parameters.containsKey("whereNotIn")) {
+    if (parameters.containsKey("whereNotIn") &&
+        parameters["whereNotIn"].isNotEmpty) {
       final val = data![key];
       final any = parameters["whereNotIn"]
           .toString()
@@ -268,6 +272,99 @@ class CollectionQuery {
       return !any.contains(val);
     }
     return true;
+  }
+
+  static List<MapEntry<String, DynamicMap>> _sort(
+    Map<String, String> parameters,
+    List<MapEntry<String, DynamicMap>> data,
+  ) {
+    if (parameters.containsKey("orderByAsc") &&
+        parameters["orderByAsc"].isNotEmpty) {
+      final key = parameters["orderByAsc"];
+      data.sort((a, b) => _compare(a.value[key], b.value[key]));
+    } else if (parameters.containsKey("orderByDesc") &&
+        parameters["orderByDesc"].isNotEmpty) {
+      final key = parameters["orderByDesc"];
+      data.sort((a, b) => _compare(b.value[key], a.value[key]));
+    }
+    return data;
+  }
+
+  static int? _seek(Map<String, String> parameters,
+      List<MapEntry<String, DynamicMap>> list, DynamicMap data) {
+    if (parameters.containsKey("orderByAsc") &&
+        parameters["orderByAsc"].isNotEmpty) {
+      final key = parameters["orderByAsc"];
+      final value = data[key];
+      if (value == null) {
+        return list.length;
+      }
+      for (var i = 0; i < list.length; i++) {
+        final p = i - 1;
+        if (i == 0) {
+          if (list[i].value[key] == null) {
+            continue;
+          }
+          final a = _compare(value, list[i].value[key]);
+          if (a <= 0) {
+            return i;
+          }
+        } else {
+          if (list[i].value[key] == null || list[p].value[key] == null) {
+            continue;
+          }
+          final a = _compare(value, list[i].value[key]);
+          final b = _compare(value, list[p].value[key]);
+          if (a <= 0 && b > 0) {
+            return i;
+          }
+        }
+      }
+      return list.length;
+    } else if (parameters.containsKey("orderByDesc") &&
+        parameters["orderByDesc"].isNotEmpty) {
+      final key = parameters["orderByDesc"];
+      final value = data[key];
+      if (value == null) {
+        return list.length;
+      }
+      for (var i = 0; i < list.length; i++) {
+        final p = i - 1;
+        if (i == 0) {
+          if (list[i].value[key] == null) {
+            continue;
+          }
+          final a = _compare(value, list[i].value[key]);
+          if (a >= 0) {
+            return i;
+          }
+        } else {
+          if (list[i].value[key] == null || list[p].value[key] == null) {
+            continue;
+          }
+          final a = _compare(value, list[i].value[key]);
+          final b = _compare(value, list[p].value[key]);
+          if (a >= 0 && b < 0) {
+            return i;
+          }
+        }
+      }
+      return list.length;
+    }
+    return null;
+  }
+
+  static int _compare(dynamic a, dynamic b) {
+    if (a == null) {
+      return -1;
+    }
+    if (b == null) {
+      return 1;
+    }
+    if (a is num && b is num) {
+      return a.compareTo(b);
+    }
+    return a.toString().compareTo(b);
   }
 
   /// Convert the collection query from [DynamicMap].

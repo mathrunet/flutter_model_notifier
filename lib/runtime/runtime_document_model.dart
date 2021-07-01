@@ -176,7 +176,7 @@ abstract class RuntimeDocumentModel<T> extends DocumentModel<T>
       );
       RuntimeDatabase._db.addDocumentListener(_query!);
       final data = await RuntimeDatabase._db.loadDocument(_query!);
-      value = fromMap(filterOnLoad(data ?? {}));
+      value = fromMap(filterOnLoad(data != null ? Map.from(data) : {}));
       notifyListeners();
       await onDidLoad();
       _completer?.complete();

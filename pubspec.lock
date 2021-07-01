@@ -204,7 +204,7 @@ packages:
       name: katana
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "0.8.2+20"
+    version: "0.8.3"
   matcher:
     dependency: transitive
     description:
@@ -454,7 +454,7 @@ packages:
       name: url_launcher
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "6.0.7"
+    version: "6.0.8"
   url_launcher_linux:
     dependency: transitive
     description:

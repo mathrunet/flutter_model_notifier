@@ -62,6 +62,7 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
   }
 
   _LocalStoreCollectionQuery? _query;
+  List<MapEntry<String, Map<String, dynamic>>> _rawEntries = [];
 
   /// Initial value of mock.
   @override
@@ -191,12 +192,16 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
       if (data.isNotEmpty) {
         notify = true;
         final addData = <T>[];
-        for (final tmp in data!.entries) {
+        _rawEntries = CollectionQuery._sort(
+          parameters,
+          List.from(data!.entries),
+        );
+        for (final tmp in _rawEntries) {
           if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
             continue;
           }
           final value = createDocument("${path.trimQuery()}/${tmp.key}");
-          value.value = value.fromMap(value.filterOnLoad(tmp.value));
+          value.value = value.fromMap(value.filterOnLoad(Map.from(tmp.value)));
           addData.add(value);
         }
         addAll(addData);
@@ -250,29 +255,62 @@ abstract class RuntimeCollectionModel<T extends RuntimeDocumentModel>
 
   void _deleteOnUpdate(_LocalStoreDocumentUpdate update) {
     bool notify = false;
-    removeWhere((element) {
+    value.removeWhere((element) {
       final remove = element.path.trimQuery().trimString("/") == update.path;
       if (remove) {
         notify = true;
       }
       return remove;
     });
+    _rawEntries.removeWhere((element) => element.key == update.id);
     if (notify) {
       notifyListeners();
     }
   }
 
   void _modifyOnUpdate(T found, _LocalStoreDocumentUpdate update) {
-    if (found == update.origin) {
-      return;
+    final pos = CollectionQuery._seek(parameters, _rawEntries, update.value);
+    final oldPos = value.indexOf(found);
+    if (pos == null) {
+      if (found != update.origin) {
+        found.value = found.fromMap(found.filterOnLoad(update.value));
+      }
+      final entry = _rawEntries[oldPos];
+      _rawEntries[oldPos] = MapEntry(entry.key, Map.from(update.value));
+    } else {
+      if (found != update.origin) {
+        found.value = found.fromMap(found.filterOnLoad(update.value));
+      }
+      if (pos == oldPos) {
+        final entry = _rawEntries[pos];
+        _rawEntries[pos] = MapEntry(entry.key, Map.from(update.value));
+      } else if (pos < oldPos) {
+        value.insert(pos, value.removeAt(oldPos));
+        final entry = _rawEntries.removeAt(oldPos);
+        _rawEntries.insert(pos, MapEntry(entry.key, Map.from(update.value)));
+        notifyListeners();
+      } else {
+        value.insert(pos - 1, value.removeAt(oldPos));
+        final entry = _rawEntries.removeAt(oldPos);
+        _rawEntries.insert(
+            pos - 1, MapEntry(entry.key, Map.from(update.value)));
+        notifyListeners();
+      }
     }
-    found.value = found.fromMap(found.filterOnLoad(update.value));
   }
 
   void _addOnUpdate(_LocalStoreDocumentUpdate update) {
-    final value = createDocument("${path.trimQuery()}/${update.id}");
-    value.value = value.fromMap(value.filterOnLoad(update.value));
-    add(value);
+    final val = createDocument("${path.trimQuery()}/${update.id}");
+    final pos = CollectionQuery._seek(parameters, _rawEntries, update.value);
+    if (pos == null || (_rawEntries.length <= pos)) {
+      val.value = val.fromMap(val.filterOnLoad(update.value));
+      value.add(val);
+      _rawEntries.add(MapEntry(update.id, Map.from(update.value)));
+    } else {
+      val.value = val.fromMap(val.filterOnLoad(update.value));
+      value.insert(pos, val);
+      _rawEntries.insert(pos, MapEntry(update.id, Map.from(update.value)));
+    }
     notifyListeners();
   }
 
