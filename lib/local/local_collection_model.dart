@@ -202,13 +202,19 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
           parameters,
           List.from(data!.entries),
         );
+        int i = 0;
+        final limit = CollectionQuery._limitCount(parameters);
         for (final tmp in _rawEntries) {
           if (tmp.key.isEmpty || tmp.value is! DynamicMap) {
+            continue;
+          }
+          if (limit != null && i >= limit) {
             continue;
           }
           final value = createDocument("${path.trimQuery()}/${tmp.key}");
           value.value = value.fromMap(value.filterOnLoad(Map.from(tmp.value)));
           addData.add(value);
+          i++;
         }
         addAll(addData);
       }
@@ -229,9 +235,10 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
   }
 
   void _handledOnUpdate(_LocalStoreDocumentUpdate update) {
+    final limit = CollectionQuery._limitCount(parameters);
     switch (update.status) {
       case _LocalStoreDocumentUpdateStatus.deleted:
-        _deleteOnUpdate(update);
+        _deleteOnUpdate(update, limit);
         break;
       default:
         final found = firstWhereOrNull((element) =>
@@ -239,28 +246,34 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         if (found != null) {
           if (_query?.filter != null) {
             if (_query!.filter!.call(update.value)) {
-              _modifyOnUpdate(found, update);
+              _modifyOnUpdate(found, update, limit);
             } else {
-              _deleteOnUpdate(update);
+              _deleteOnUpdate(update, limit);
             }
           } else {
-            _modifyOnUpdate(found, update);
+            _modifyOnUpdate(found, update, limit);
           }
         } else {
           if (_query?.filter != null) {
             if (_query!.filter!.call(update.value)) {
-              _addOnUpdate(update);
+              _addOnUpdate(update, limit);
             }
           } else {
-            _addOnUpdate(update);
+            _addOnUpdate(update, limit);
           }
         }
         break;
     }
   }
 
-  void _deleteOnUpdate(_LocalStoreDocumentUpdate update) {
+  void _deleteOnUpdate(_LocalStoreDocumentUpdate update, int? limit) {
     bool notify = false;
+    if (limit != null && _rawEntries.length > limit) {
+      final entry = _rawEntries[limit];
+      final val = createDocument("${path.trimQuery()}/${entry.key}");
+      val.value = val.fromMap(val.filterOnLoad(Map.from(entry.value)));
+      value.add(val);
+    }
     value.removeWhere((element) {
       final remove = element.path.trimQuery().trimString("/") == update.path;
       if (remove) {
@@ -274,7 +287,7 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     }
   }
 
-  void _modifyOnUpdate(T found, _LocalStoreDocumentUpdate update) {
+  void _modifyOnUpdate(T found, _LocalStoreDocumentUpdate update, int? limit) {
     final pos = CollectionQuery._seek(parameters, _rawEntries, update.value);
     final oldPos = value.indexOf(found);
     if (pos == null) {
@@ -291,12 +304,31 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
         final entry = _rawEntries[pos];
         _rawEntries[pos] = MapEntry(entry.key, Map.from(update.value));
       } else if (pos < oldPos) {
-        value.insert(pos, value.removeAt(oldPos));
+        if (limit == null || (pos < limit && oldPos < limit)) {
+          value.insert(pos, value.removeAt(oldPos));
+        } else {
+          final val = createDocument("${path.trimQuery()}/${update.id}");
+          val.value = val.fromMap(val.filterOnLoad(update.value));
+          value.add(val);
+          value.removeLast();
+        }
         final entry = _rawEntries.removeAt(oldPos);
         _rawEntries.insert(pos, MapEntry(entry.key, Map.from(update.value)));
         notifyListeners();
       } else {
-        value.insert(pos - 1, value.removeAt(oldPos));
+        if (limit == null || (pos < limit && oldPos < limit)) {
+          value.insert(pos - 1, value.removeAt(oldPos));
+        } else if (oldPos < limit) {
+          if (_rawEntries.length <= limit) {
+            value.insert(pos - 1, value.removeAt(oldPos));
+          } else {
+            value.removeAt(oldPos);
+            final entry = _rawEntries[limit];
+            final val = createDocument("${path.trimQuery()}/${entry.key}");
+            val.value = val.fromMap(val.filterOnLoad(Map.from(entry.value)));
+            value.add(val);
+          }
+        }
         final entry = _rawEntries.removeAt(oldPos);
         _rawEntries.insert(
             pos - 1, MapEntry(entry.key, Map.from(update.value)));
@@ -305,16 +337,23 @@ abstract class LocalCollectionModel<T extends LocalDocumentModel>
     }
   }
 
-  void _addOnUpdate(_LocalStoreDocumentUpdate update) {
+  void _addOnUpdate(_LocalStoreDocumentUpdate update, int? limit) {
     final val = createDocument("${path.trimQuery()}/${update.id}");
     final pos = CollectionQuery._seek(parameters, _rawEntries, update.value);
     if (pos == null || (_rawEntries.length <= pos)) {
-      val.value = val.fromMap(val.filterOnLoad(update.value));
-      value.add(val);
+      if (limit == null || value.length < limit) {
+        val.value = val.fromMap(val.filterOnLoad(update.value));
+        value.add(val);
+      }
       _rawEntries.add(MapEntry(update.id, Map.from(update.value)));
     } else {
-      val.value = val.fromMap(val.filterOnLoad(update.value));
-      value.insert(pos, val);
+      if (limit == null || pos < limit) {
+        val.value = val.fromMap(val.filterOnLoad(update.value));
+        value.insert(pos, val);
+        if (limit != null && value.length > limit) {
+          value.removeLast();
+        }
+      }
       _rawEntries.insert(pos, MapEntry(update.id, Map.from(update.value)));
     }
     notifyListeners();

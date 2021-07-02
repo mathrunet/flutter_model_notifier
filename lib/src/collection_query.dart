@@ -367,6 +367,17 @@ class CollectionQuery {
     return a.toString().compareTo(b);
   }
 
+  static int? _limitCount(Map<String, String> parameters) {
+    if (parameters.containsKey("limitToFirst") &&
+        parameters["limitToFirst"].isNotEmpty) {
+      final limit = int.tryParse(parameters["limitToFirst"]!);
+      if (limit != null) {
+        return limit;
+      }
+    }
+    return null;
+  }
+
   /// Convert the collection query from [DynamicMap].
   static CollectionQuery? _fromMap(DynamicMap map) {
     if (map.isEmpty || !map.containsKey("path")) {
